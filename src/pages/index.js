@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./styles.css";
 
+const API_BASE_URL = process.env.GATSBY_API_URL || "http://localhost:5001";
+
 const IndexPage = () => {
   const [products, setProducts] = useState([]);
   const [form, setForm] = useState({
@@ -12,7 +14,7 @@ const IndexPage = () => {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get("http://localhost:5001/products");
+      const res = await axios.get(`${API_BASE_URL}/products`);
       setProducts(res.data);
     } catch (err) {
       console.error("Error fetching products", err);
@@ -32,7 +34,7 @@ const IndexPage = () => {
     e.preventDefault();
     if (!form.name || !form.price || !form.image) return;
     try {
-      await axios.post("http://localhost:5001/products", {
+      await axios.post(`${API_BASE_URL}/products`, {
         name: form.name,
         price: parseFloat(form.price),
         image: form.image,
