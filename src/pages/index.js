@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import "./styles.css";
 
-const API_BASE_URL = process.env.GATSBY_API_URL || "https://apins.vtemgt.com/api";
+const API_BASE_URL = process.env.GATSBY_API_URL || "https://apins.vtemgt.com";
 
 const IndexPage = () => {
   const [products, setProducts] = useState([]);
