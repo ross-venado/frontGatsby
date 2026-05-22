@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { apiFetch } from '@/lib/api';
 import { clearSession, getUser } from '@/lib/auth';
-import type { AuthUser } from '@/types/mercadito';
+import type { AuthUser, Business } from '@/types/mercadito';
 
 const links = [
   { href: '/dashboard', label: 'Negocio' },
@@ -16,15 +17,33 @@ const links = [
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
+  const [business, setBusiness] = useState<Business | null>(null);
 
   useEffect(() => {
-    setUser(getUser());
+    const sessionUser = getUser();
+    setUser(sessionUser);
+    const token = localStorage.getItem('mercadito_token');
+    if (!token || sessionUser?.role !== 'business_owner') return;
+
+    void apiFetch<Business>('/business/me', { token })
+      .then(setBusiness)
+      .catch(() => setBusiness(null));
   }, []);
+
+  const businessLinks =
+    business?.modules?.includes('restaurant')
+      ? [
+          ...links,
+          { href: '/dashboard/restaurant', label: 'Restaurante' },
+          { href: '/dashboard/restaurant/tables', label: 'Mesas' },
+          { href: '/dashboard/restaurant/orders', label: 'Pedidos' },
+        ]
+      : [...links, { href: '/dashboard/restaurant', label: 'Restaurante' }];
 
   const visibleLinks =
     user?.role === 'admin'
       ? [...links, { href: '/cq-backoffice', label: 'Backoffice' }]
-      : links;
+      : businessLinks;
 
   return (
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[220px_1fr]">

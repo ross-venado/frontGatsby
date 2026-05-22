@@ -41,7 +41,7 @@ export default function DashboardPage() {
       address: String(form.get('address') || ''),
       logoUrl: String(form.get('logoUrl') || ''),
       coverUrl: String(form.get('coverUrl') || ''),
-      modules: ['marketplace'],
+      modules: business?.modules?.length ? business.modules : ['marketplace'],
     };
 
     const updated = await apiFetch<Business>('/business/me', {

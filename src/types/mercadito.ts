@@ -5,6 +5,26 @@ export type ServiceStatus = 'active' | 'inactive';
 export type AdminRole = 'super_admin' | 'operations' | 'support' | 'billing';
 export type BusinessRole = 'owner' | 'manager' | 'catalog_manager' | 'staff';
 export type CatalogCategoryType = 'product' | 'service' | 'both';
+export type BusinessModule =
+  | 'marketplace'
+  | 'restaurant'
+  | 'automotive'
+  | 'workshop'
+  | 'quotes'
+  | 'appointments';
+export type RestaurantTableStatus =
+  | 'free'
+  | 'occupied'
+  | 'waiting_payment'
+  | 'inactive';
+export type RestaurantOrderStatus =
+  | 'new'
+  | 'preparing'
+  | 'ready'
+  | 'delivered'
+  | 'waiting_payment'
+  | 'paid'
+  | 'cancelled';
 
 export type BusinessCategory = {
   _id: string;
@@ -40,7 +60,7 @@ export type Business = {
   coverUrl?: string;
   status: BusinessStatus;
   plan: PlanCode;
-  modules: string[];
+  modules: BusinessModule[];
 };
 
 export type Product = {
@@ -93,4 +113,45 @@ export type AuthUser = {
 export type AuthResponse = {
   user: AuthUser;
   token: string;
+};
+
+export type RestaurantTable = {
+  _id: string;
+  businessId: string;
+  name: string;
+  code: string;
+  qrSlug: string;
+  status: RestaurantTableStatus;
+  active: boolean;
+};
+
+export type RestaurantOrderItem = {
+  productId: string;
+  name: string;
+  quantity: number;
+  unitPrice: number;
+  notes?: string;
+  subtotal: number;
+};
+
+export type RestaurantOrder = {
+  _id: string;
+  businessId: string;
+  tableId: RestaurantTable | string;
+  orderNumber: number;
+  customerName?: string;
+  customerPhone?: string;
+  status: RestaurantOrderStatus;
+  items: RestaurantOrderItem[];
+  total: number;
+  notes?: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type PublicRestaurantTablePayload = {
+  business: Business;
+  table: RestaurantTable;
+  products: Product[];
 };

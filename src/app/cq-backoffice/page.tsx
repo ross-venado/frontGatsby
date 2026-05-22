@@ -7,6 +7,7 @@ import type {
   AuthResponse,
   Business,
   BusinessCategory,
+  BusinessModule,
   BusinessStatus,
   PlanCode,
   SubscriptionPlan,
@@ -71,15 +72,28 @@ export default function BackofficePage() {
     }
   }
 
-  async function updateBusiness(id: string, status: BusinessStatus, plan: PlanCode) {
+  async function updateBusiness(
+    id: string,
+    status: BusinessStatus,
+    plan: PlanCode,
+    modules?: BusinessModule[],
+  ) {
     const token = getToken();
     if (!token) return;
     await apiFetch(`/admin/businesses/${id}/status`, {
       method: 'PATCH',
       token,
-      body: JSON.stringify({ status, plan }),
+      body: JSON.stringify({ status, plan, modules }),
     });
     await load();
+  }
+
+  function toggleRestaurantModule(business: Business) {
+    const modules = business.modules.includes('restaurant')
+      ? business.modules.filter((module) => module !== 'restaurant')
+      : [...business.modules, 'restaurant' as BusinessModule];
+
+    return updateBusiness(business._id, business.status, business.plan, modules);
   }
 
   async function createCategory(event: FormEvent<HTMLFormElement>) {
@@ -160,7 +174,12 @@ export default function BackofficePage() {
                         <p className="text-xs text-black/50">/{business.slug}</p>
                       </td>
                       <td className="py-3">{business.status}</td>
-                      <td className="py-3">{business.plan}</td>
+                      <td className="py-3">
+                        <p>{business.plan}</p>
+                        <p className="text-xs text-black/50">
+                          {business.modules.join(', ')}
+                        </p>
+                      </td>
                       <td className="flex flex-wrap gap-2 py-3">
                         <button className="btn-secondary" onClick={() => void updateBusiness(business._id, 'active', business.plan)}>
                           Aprobar
@@ -173,6 +192,11 @@ export default function BackofficePage() {
                             {plan}
                           </button>
                         ))}
+                        <button className="btn-secondary" onClick={() => void toggleRestaurantModule(business)}>
+                          {business.modules.includes('restaurant')
+                            ? 'Quitar restaurante'
+                            : 'Activar restaurante'}
+                        </button>
                       </td>
                     </tr>
                   ))}
