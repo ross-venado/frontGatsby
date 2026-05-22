@@ -15,6 +15,7 @@
 4. Crear una mesa, por ejemplo `Mesa 1`.
 5. Copiar el link QR o escanear el QR visual.
 6. Entrar a `Pedidos` y dejar abierto para validar entradas.
+7. Para pedido manual, seleccionar mesa, agregar productos, cantidades y notas, y crear el pedido desde el panel.
 
 ## Flujo cliente QR
 
@@ -30,9 +31,10 @@
 
 1. Volver a `/dashboard/restaurant/orders`.
 2. Confirmar que aparece el pedido.
-3. Abrir detalle y revisar items, notas y total.
-4. Cambiar estado a `preparing`, `ready`, `delivered`, `waiting_payment`, `paid` o `cancelled`.
-5. Confirmar que el filtro por estado devuelve el pedido correcto.
+3. Confirmar que el pedido muestra la mesa asignada.
+4. Abrir detalle y revisar mesa, items, notas y total.
+5. Cambiar estado a `preparing`, `ready`, `delivered`, `waiting_payment`, `paid` o `cancelled`.
+6. Confirmar que el filtro por estado devuelve el pedido correcto.
 
 ## Caso sin modulo activo
 

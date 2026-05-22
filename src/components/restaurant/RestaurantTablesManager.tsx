@@ -1,11 +1,15 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useMemo, useState } from 'react';
 import { BusinessQr } from '@/components/BusinessQr';
 import { apiFetch } from '@/lib/api';
 import { siteBaseUrl } from '@/lib/config';
 import { getToken } from '@/lib/auth';
-import type { Business, RestaurantTable, RestaurantTableStatus } from '@/types/mercadito';
+import type {
+  Business,
+  RestaurantTable,
+  RestaurantTableStatus,
+} from '@/types/mercadito';
 
 type FormState = {
   name: string;
@@ -19,6 +23,13 @@ const emptyForm: FormState = {
   code: '',
   status: 'free',
   active: true,
+};
+
+const tableStatusLabels: Record<RestaurantTableStatus, string> = {
+  free: 'Libre',
+  occupied: 'Ocupada',
+  waiting_payment: 'Por cobrar',
+  inactive: 'Inactiva',
 };
 
 export function RestaurantTablesManager() {
@@ -107,6 +118,19 @@ export function RestaurantTablesManager() {
     setMessage('Link copiado.');
   }
 
+  const tableSummary = useMemo(
+    () => ({
+      total: tables.length,
+      occupied: tables.filter((table) => table.status === 'occupied').length,
+      waitingPayment: tables.filter((table) => table.status === 'waiting_payment')
+        .length,
+      free: tables.filter((table) => table.status === 'free').length,
+      inactive: tables.filter((table) => !table.active || table.status === 'inactive')
+        .length,
+    }),
+    [tables],
+  );
+
   return (
     <div className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <form className="surface h-fit rounded-lg p-5" onSubmit={submit}>
@@ -186,17 +210,70 @@ export function RestaurantTablesManager() {
         </div>
       </form>
 
-      <div className="grid gap-4">
+      <div className="space-y-4">
+        <section className="surface rounded-lg p-5">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-wide text-jade">
+              Mapa de mesas
+            </p>
+            <h2 className="mt-1 text-2xl font-bold text-ink">
+              Estado operativo
+            </h2>
+          </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-5">
+            <div className="rounded-lg bg-black/[0.03] p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                Total
+              </p>
+              <p className="mt-1 text-xl font-bold text-ink">
+                {tableSummary.total}
+              </p>
+            </div>
+            <div className="rounded-lg bg-red-50 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-red-700">
+                Ocupadas
+              </p>
+              <p className="mt-1 text-xl font-bold text-red-700">
+                {tableSummary.occupied}
+              </p>
+            </div>
+            <div className="rounded-lg bg-maize/15 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                Por cobrar
+              </p>
+              <p className="mt-1 text-xl font-bold text-ink">
+                {tableSummary.waitingPayment}
+              </p>
+            </div>
+            <div className="rounded-lg bg-jade/10 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-jade">
+                Libres
+              </p>
+              <p className="mt-1 text-xl font-bold text-jade">
+                {tableSummary.free}
+              </p>
+            </div>
+            <div className="rounded-lg bg-black/[0.03] p-3">
+              <p className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                Inactivas
+              </p>
+              <p className="mt-1 text-xl font-bold text-ink">
+                {tableSummary.inactive}
+              </p>
+            </div>
+          </div>
+        </section>
+
         {tables.map((table) => {
           const url = tableUrl(table);
           return (
-            <article key={table._id} className="surface rounded-lg p-4">
-              <div className="grid gap-4 md:grid-cols-[1fr_180px]">
+            <article key={table._id} className="surface overflow-hidden rounded-lg p-4">
+              <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_220px]">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
                     <h2 className="text-lg font-bold text-ink">{table.name}</h2>
                     <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-semibold text-black/60">
-                      {table.status}
+                      {tableStatusLabels[table.status]}
                     </span>
                     <span className="rounded-full bg-black/5 px-3 py-1 text-xs font-semibold text-black/60">
                       {table.active ? 'Activa' : 'Inactiva'}
@@ -218,7 +295,13 @@ export function RestaurantTablesManager() {
                     </button>
                   </div>
                 </div>
-                <BusinessQr value={url || table.qrSlug} label={`QR ${table.name}`} />
+                <div className="flex justify-start xl:justify-end">
+                  <BusinessQr
+                    value={url || table.qrSlug}
+                    label={`QR ${table.name}`}
+                    size={168}
+                  />
+                </div>
               </div>
             </article>
           );
