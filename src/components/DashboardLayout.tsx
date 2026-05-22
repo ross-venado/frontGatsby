@@ -1,0 +1,51 @@
+'use client';
+
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { clearSession, getUser } from '@/lib/auth';
+
+const links = [
+  { href: '/dashboard', label: 'Negocio' },
+  { href: '/dashboard/products', label: 'Productos' },
+  { href: '/dashboard/services', label: 'Servicios' },
+  { href: '/admin', label: 'Admin' },
+];
+
+export function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
+  const user = typeof window !== 'undefined' ? getUser() : null;
+
+  return (
+    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[220px_1fr]">
+      <aside className="surface h-fit rounded-lg p-4">
+        <p className="text-xs font-semibold uppercase tracking-wide text-jade">
+          Panel
+        </p>
+        <p className="mt-1 text-sm font-semibold text-ink">
+          {user?.name || 'Usuario'}
+        </p>
+        <nav className="mt-5 grid gap-1">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-md px-3 py-2 text-sm font-medium text-black/70 hover:bg-black/5"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+        <button
+          className="btn-secondary mt-5 w-full"
+          onClick={() => {
+            clearSession();
+            router.push('/login');
+          }}
+        >
+          Salir
+        </button>
+      </aside>
+      <section>{children}</section>
+    </main>
+  );
+}

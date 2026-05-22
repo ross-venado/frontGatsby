@@ -1,0 +1,39 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #17202a;
+  background: #f7f3eb;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.72), rgba(247, 243, 235, 0.92)),
+    #f7f3eb;
+}
+
+a,
+button,
+input,
+select,
+textarea {
+  outline-color: #0f8b6f;
+}
+
+.surface {
+  @apply border border-black/10 bg-white shadow-soft;
+}
+
+.btn-primary {
+  @apply inline-flex items-center justify-center rounded-md bg-jade px-4 py-2 text-sm font-semibold text-white transition hover:bg-jade/90;
+}
+
+.btn-secondary {
+  @apply inline-flex items-center justify-center rounded-md border border-black/15 bg-white px-4 py-2 text-sm font-semibold text-ink transition hover:bg-black/5;
+}
+
+.field {
+  @apply w-full rounded-md border border-black/15 bg-white px-3 py-2 text-sm text-ink placeholder:text-black/40;
+}
