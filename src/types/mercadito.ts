@@ -2,6 +2,9 @@ export type BusinessStatus = 'draft' | 'active' | 'suspended';
 export type PlanCode = 'free' | 'basic' | 'plus' | 'pro';
 export type ProductStatus = 'active' | 'inactive' | 'sold_out';
 export type ServiceStatus = 'active' | 'inactive';
+export type AdminRole = 'super_admin' | 'operations' | 'support' | 'billing';
+export type BusinessRole = 'owner' | 'manager' | 'catalog_manager' | 'staff';
+export type CatalogCategoryType = 'product' | 'service' | 'both';
 
 export type BusinessCategory = {
   _id: string;
@@ -9,6 +12,16 @@ export type BusinessCategory = {
   slug: string;
   description?: string;
   icon?: string;
+  active: boolean;
+};
+
+export type BusinessCatalogCategory = {
+  _id: string;
+  businessId: string;
+  name: string;
+  slug: string;
+  description?: string;
+  type: CatalogCategoryType;
   active: boolean;
 };
 
@@ -73,6 +86,8 @@ export type AuthUser = {
   name: string;
   email: string;
   role: 'admin' | 'business_owner';
+  adminRole?: AdminRole;
+  businessRole?: BusinessRole;
 };
 
 export type AuthResponse = {

@@ -1,11 +1,10 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { AuthGuard } from '@/components/AuthGuard';
-import { DashboardLayout } from '@/components/DashboardLayout';
 import { apiFetch, money } from '@/lib/api';
-import { getToken } from '@/lib/auth';
+import { getToken, getUser, saveSession } from '@/lib/auth';
 import type {
+  AuthResponse,
   Business,
   BusinessCategory,
   BusinessStatus,
@@ -13,11 +12,12 @@ import type {
   SubscriptionPlan,
 } from '@/types/mercadito';
 
-export default function AdminPage() {
+export default function BackofficePage() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [categories, setCategories] = useState<BusinessCategory[]>([]);
   const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
   const [error, setError] = useState('');
+  const [hasSession, setHasSession] = useState(false);
 
   async function load() {
     const token = getToken();
@@ -35,10 +35,41 @@ export default function AdminPage() {
   }
 
   useEffect(() => {
+    const user = getUser();
+    const isAdmin = Boolean(getToken()) && user?.role === 'admin';
+    setHasSession(isAdmin);
+    if (!isAdmin) return;
+
     void load().catch((err) =>
-      setError(err instanceof Error ? err.message : 'No se pudo cargar admin'),
+      setError(err instanceof Error ? err.message : 'No se pudo cargar backoffice'),
     );
   }, []);
+
+  async function loginAdmin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError('');
+    const form = new FormData(event.currentTarget);
+    try {
+      const session = await apiFetch<AuthResponse>('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: String(form.get('email') || ''),
+          password: String(form.get('password') || ''),
+        }),
+      });
+
+      if (session.user.role !== 'admin') {
+        setError('Esta URL es solo para administradores.');
+        return;
+      }
+
+      saveSession(session);
+      setHasSession(true);
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo iniciar sesion');
+    }
+  }
 
   async function updateBusiness(id: string, status: BusinessStatus, plan: PlanCode) {
     const token = getToken();
@@ -95,20 +126,21 @@ export default function AdminPage() {
   }
 
   return (
-    <AuthGuard>
-      <DashboardLayout>
-        <div className="space-y-6">
+    <main className="mx-auto max-w-6xl px-4 py-8">
+      <div className="space-y-6">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-jade">
-              Administracion
+              CodeQuetzal Backoffice
             </p>
             <h1 className="mt-1 text-3xl font-bold text-ink">
-              Negocios, categorias y planes
+              Operacion del mercadito
             </h1>
             {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
           </div>
 
-          <section className="surface rounded-lg p-5">
+        {hasSession ? (
+          <>
+            <section className="surface rounded-lg p-5">
             <h2 className="text-xl font-bold text-ink">Negocios registrados</h2>
             <div className="mt-4 overflow-x-auto">
               <table className="w-full min-w-[720px] text-left text-sm">
@@ -130,34 +162,14 @@ export default function AdminPage() {
                       <td className="py-3">{business.status}</td>
                       <td className="py-3">{business.plan}</td>
                       <td className="flex flex-wrap gap-2 py-3">
-                        <button
-                          className="btn-secondary"
-                          onClick={() =>
-                            void updateBusiness(business._id, 'active', business.plan)
-                          }
-                        >
+                        <button className="btn-secondary" onClick={() => void updateBusiness(business._id, 'active', business.plan)}>
                           Aprobar
                         </button>
-                        <button
-                          className="btn-secondary"
-                          onClick={() =>
-                            void updateBusiness(
-                              business._id,
-                              'suspended',
-                              business.plan,
-                            )
-                          }
-                        >
+                        <button className="btn-secondary" onClick={() => void updateBusiness(business._id, 'suspended', business.plan)}>
                           Suspender
                         </button>
                         {(['free', 'basic', 'plus', 'pro'] as PlanCode[]).map((plan) => (
-                          <button
-                            key={plan}
-                            className="btn-secondary"
-                            onClick={() =>
-                              void updateBusiness(business._id, business.status, plan)
-                            }
-                          >
+                          <button key={plan} className="btn-secondary" onClick={() => void updateBusiness(business._id, business.status, plan)}>
                             {plan}
                           </button>
                         ))}
@@ -167,11 +179,11 @@ export default function AdminPage() {
                 </tbody>
               </table>
             </div>
-          </section>
+            </section>
 
-          <div className="grid gap-6 lg:grid-cols-2">
+            <div className="grid gap-6 lg:grid-cols-2">
             <section className="surface rounded-lg p-5">
-              <h2 className="text-xl font-bold text-ink">Categorias</h2>
+              <h2 className="text-xl font-bold text-ink">Categorias marketplace</h2>
               <form className="mt-4 grid gap-3" onSubmit={createCategory}>
                 <input className="field" name="name" placeholder="Nombre" required />
                 <input className="field" name="description" placeholder="Descripcion" />
@@ -199,17 +211,8 @@ export default function AdminPage() {
                 </select>
                 <input className="field" name="name" placeholder="Nombre" required />
                 <input className="field" name="price" type="number" placeholder="Precio" />
-                <input
-                  className="field"
-                  name="productLimit"
-                  type="number"
-                  placeholder="Limite productos"
-                />
-                <input
-                  className="field"
-                  name="features"
-                  placeholder="Features separadas por coma"
-                />
+                <input className="field" name="productLimit" type="number" placeholder="Limite productos" />
+                <input className="field" name="features" placeholder="Features separadas por coma" />
                 <button className="btn-primary">Crear plan</button>
               </form>
               <div className="mt-4 grid gap-2">
@@ -225,9 +228,33 @@ export default function AdminPage() {
                 ))}
               </div>
             </section>
-          </div>
-        </div>
-      </DashboardLayout>
-    </AuthGuard>
+            </div>
+          </>
+        ) : (
+          <section className="surface mx-auto max-w-md rounded-lg p-6">
+            <h2 className="text-xl font-bold text-ink">Login backoffice</h2>
+            <p className="mt-2 text-sm text-black/60">
+              Acceso privado para administradores de CodeQuetzal.
+            </p>
+            <form className="mt-5 space-y-4" onSubmit={loginAdmin}>
+              <label className="block">
+                <span className="text-sm font-medium">Email</span>
+                <input className="field mt-1" name="email" type="email" required />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium">Password</span>
+                <input
+                  className="field mt-1"
+                  name="password"
+                  type="password"
+                  required
+                />
+              </label>
+              <button className="btn-primary w-full">Entrar</button>
+            </form>
+          </section>
+        )}
+      </div>
+    </main>
   );
 }

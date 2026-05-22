@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { BusinessQr } from '@/components/BusinessQr';
 import { EmptyState } from '@/components/EmptyState';
 import { apiFetch, mapsUrl, money, whatsappUrl } from '@/lib/api';
 import type { Business, Product, Service } from '@/types/mercadito';
@@ -17,6 +18,7 @@ export default async function BusinessPage({ params }: PageProps) {
 
   const whatsapp = whatsappUrl(business.whatsapp || business.phone, business.name);
   const map = mapsUrl(business.address, business.location);
+  const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/businesses/${business.slug}`;
 
   return (
     <main>
@@ -116,12 +118,11 @@ export default async function BusinessPage({ params }: PageProps) {
 
         <aside id="qr" className="surface h-fit rounded-lg p-5">
           <h2 className="text-lg font-bold text-ink">QR del local</h2>
-          <div className="mt-4 grid aspect-square place-items-center rounded-lg border border-dashed border-black/20 bg-black/[0.03] text-center text-sm font-semibold text-black/50">
-            URL lista para QR
+          <div className="mt-4">
+            <BusinessQr value={publicUrl} label={`QR de ${business.name}`} />
           </div>
           <p className="mt-3 break-all text-sm text-black/60">
-            {process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}
-            /businesses/{business.slug}
+            {publicUrl}
           </p>
         </aside>
       </section>

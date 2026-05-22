@@ -22,7 +22,6 @@ export default function LoginPage() {
       name: String(form.get('name') || ''),
       email: String(form.get('email') || ''),
       password: String(form.get('password') || ''),
-      role: String(form.get('role') || 'business_owner'),
     };
 
     try {
@@ -33,13 +32,17 @@ export default function LoginPage() {
           body: JSON.stringify(
             mode === 'login'
               ? { email: payload.email, password: payload.password }
-              : payload,
+              : {
+                  name: payload.name,
+                  email: payload.email,
+                  password: payload.password,
+                },
           ),
         },
       );
 
       saveSession(session);
-      router.push(payload.role === 'admin' ? '/admin' : '/dashboard');
+      router.push(session.user.role === 'admin' ? '/cq-backoffice' : '/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'No se pudo iniciar sesion');
     } finally {
@@ -77,13 +80,6 @@ export default function LoginPage() {
               <label className="block">
                 <span className="text-sm font-medium text-ink">Nombre</span>
                 <input className="field mt-1" name="name" required />
-              </label>
-              <label className="block">
-                <span className="text-sm font-medium text-ink">Rol</span>
-                <select className="field mt-1" name="role" defaultValue="business_owner">
-                  <option value="business_owner">Negocio</option>
-                  <option value="admin">Admin</option>
-                </select>
               </label>
             </>
           ) : null}

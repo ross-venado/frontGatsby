@@ -2,18 +2,29 @@
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { clearSession, getUser } from '@/lib/auth';
+import type { AuthUser } from '@/types/mercadito';
 
 const links = [
   { href: '/dashboard', label: 'Negocio' },
+  { href: '/dashboard/categories', label: 'Categorias' },
   { href: '/dashboard/products', label: 'Productos' },
   { href: '/dashboard/services', label: 'Servicios' },
-  { href: '/admin', label: 'Admin' },
 ];
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const user = typeof window !== 'undefined' ? getUser() : null;
+  const [user, setUser] = useState<AuthUser | null>(null);
+
+  useEffect(() => {
+    setUser(getUser());
+  }, []);
+
+  const visibleLinks =
+    user?.role === 'admin'
+      ? [...links, { href: '/cq-backoffice', label: 'Backoffice' }]
+      : links;
 
   return (
     <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[220px_1fr]">
@@ -25,7 +36,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           {user?.name || 'Usuario'}
         </p>
         <nav className="mt-5 grid gap-1">
-          {links.map((link) => (
+          {visibleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}

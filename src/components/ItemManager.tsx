@@ -3,7 +3,11 @@
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import { apiFetch, money } from '@/lib/api';
 import { getToken } from '@/lib/auth';
-import type { Product, Service } from '@/types/mercadito';
+import type {
+  BusinessCatalogCategory,
+  Product,
+  Service,
+} from '@/types/mercadito';
 
 type Mode = 'products' | 'services';
 
@@ -35,6 +39,7 @@ const emptyForm: FormItem = {
 
 export function ItemManager({ mode }: ItemManagerProps) {
   const [items, setItems] = useState<Array<Product | Service>>([]);
+  const [categories, setCategories] = useState<BusinessCatalogCategory[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormItem>(emptyForm);
   const [error, setError] = useState('');
@@ -47,7 +52,19 @@ export function ItemManager({ mode }: ItemManagerProps) {
     if (!token) return;
     const data = await apiFetch<Array<Product | Service>>(basePath, { token });
     setItems(data);
-  }, [basePath]);
+
+    const categoryData = await apiFetch<BusinessCatalogCategory[]>(
+      '/business/catalog-categories',
+      { token },
+    );
+    setCategories(
+      categoryData.filter((category) =>
+        mode === 'products'
+          ? category.type === 'product' || category.type === 'both'
+          : category.type === 'service' || category.type === 'both',
+      ),
+    );
+  }, [basePath, mode]);
 
   useEffect(() => {
     void load().catch((err) =>
@@ -145,13 +162,20 @@ export function ItemManager({ mode }: ItemManagerProps) {
           </label>
           <label className="block">
             <span className="text-sm font-medium">Categoria interna</span>
-            <input
+            <select
               className="field mt-1"
               value={form.category}
               onChange={(event) =>
                 setForm({ ...form, category: event.target.value })
               }
-            />
+            >
+              <option value="">Sin categoria</option>
+              {categories.map((category) => (
+                <option key={category._id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </label>
 
           {mode === 'products' ? (
