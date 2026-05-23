@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Mercadito Chimalteco">
+  <rect width="512" height="512" rx="112" fill="#0f8b6f"/>
+  <circle cx="256" cy="256" r="180" fill="#f7f3eb"/>
+  <path fill="#f2b84b" d="M130 218c0-55 45-100 100-100h52c55 0 100 45 100 100v24H130v-24Z"/>
+  <path fill="#17202a" d="M132 230h248v41c0 74-56 134-124 134s-124-60-124-134v-41Z"/>
+  <path fill="#f7f3eb" d="M181 276h42v82h-42zM245 276h42v82h-42zM309 276h22v82h-22z"/>
+  <path fill="#c76f3d" d="M128 220h256v44H128z"/>
+  <path fill="#f7f3eb" d="M164 166h184v34H164z"/>
+</svg>

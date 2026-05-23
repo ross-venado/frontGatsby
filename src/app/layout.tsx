@@ -1,10 +1,30 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { PwaInstallButton } from '@/components/PwaInstallButton';
+import { PwaRegister } from '@/components/PwaRegister';
 import './globals.css';
 
 export const metadata: Metadata = {
+  applicationName: 'Mercadito Chimalteco',
   title: 'Mercadito Chimalteco by CodeQuetzal',
   description: 'Locales digitales para negocios de Chimaltenango.',
+  manifest: '/manifest.webmanifest',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'default',
+    title: 'Mercadito',
+  },
+  formatDetection: {
+    telephone: true,
+  },
+  icons: {
+    icon: '/icons/mercadito-icon.svg',
+    shortcut: '/icons/mercadito-icon.svg',
+    apple: '/icons/mercadito-icon.svg',
+  },
+  other: {
+    'mobile-web-app-capable': 'yes',
+  },
 };
 
 export default function RootLayout({
@@ -30,10 +50,12 @@ export default function RootLayout({
               <Link className="btn-primary" href="/dashboard">
                 Panel
               </Link>
+              <PwaInstallButton />
             </nav>
           </div>
         </header>
         {children}
+        <PwaRegister />
       </body>
     </html>
   );
