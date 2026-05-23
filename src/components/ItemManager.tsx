@@ -1,6 +1,7 @@
 'use client';
 
 import { FormEvent, useCallback, useEffect, useState } from 'react';
+import { ImageUrlField } from '@/components/ImageUrlField';
 import { apiFetch, money } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import type {
@@ -100,15 +101,23 @@ export function ItemManager({ mode }: ItemManagerProps) {
             status: form.status,
           };
 
-    await apiFetch(editingId ? `${basePath}/${editingId}` : basePath, {
-      method: editingId ? 'PATCH' : 'POST',
-      token,
-      body: JSON.stringify(payload),
-    });
+    try {
+      await apiFetch(editingId ? `${basePath}/${editingId}` : basePath, {
+        method: editingId ? 'PATCH' : 'POST',
+        token,
+        body: JSON.stringify(payload),
+      });
 
-    setForm(emptyForm);
-    setEditingId(null);
-    await load();
+      setForm(emptyForm);
+      setEditingId(null);
+      await load();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo guardar. Revisa la imagen o intenta con un link.',
+      );
+    }
   }
 
   async function remove(id: string) {
@@ -218,16 +227,12 @@ export function ItemManager({ mode }: ItemManagerProps) {
             </div>
           )}
 
-          <label className="block">
-            <span className="text-sm font-medium">Imagen URL</span>
-            <input
-              className="field mt-1"
-              value={form.imageUrl}
-              onChange={(event) =>
-                setForm({ ...form, imageUrl: event.target.value })
-              }
-            />
-          </label>
+          <ImageUrlField
+            label="Imagen"
+            value={form.imageUrl}
+            onChange={(value) => setForm({ ...form, imageUrl: value })}
+            previewLabel={`Imagen de ${form.name || title}`}
+          />
           <label className="block">
             <span className="text-sm font-medium">Estado</span>
             <select
@@ -266,20 +271,34 @@ export function ItemManager({ mode }: ItemManagerProps) {
         {items.map((item) => (
           <article
             key={item._id}
-            className="surface flex flex-col justify-between gap-4 rounded-lg p-4 md:flex-row md:items-center"
+            className="surface flex flex-col gap-4 overflow-hidden rounded-lg p-4 sm:flex-row sm:items-center"
           >
-            <div>
-              <h2 className="font-semibold text-ink">{item.name}</h2>
-              <p className="mt-1 text-sm text-black/60">
+            <div className="h-28 w-full shrink-0 overflow-hidden rounded-lg bg-gradient-to-br from-jade/15 via-maize/20 to-clay/15 sm:w-32">
+              {item.images?.[0] ? (
+                <div
+                  aria-hidden="true"
+                  className="h-full w-full bg-cover bg-center"
+                  style={{ backgroundImage: `url(${item.images[0]})` }}
+                />
+              ) : null}
+            </div>
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate font-semibold text-ink">{item.name}</h2>
+              <p className="mt-1 line-clamp-2 text-sm text-black/60">
                 {item.description || item.category || 'Sin descripcion'}
               </p>
-              <p className="mt-2 text-sm font-bold text-jade">
-                {'price' in item
-                  ? money(item.price)
-                  : `${money(item.priceFrom)} - ${money(item.priceTo)}`}
-              </p>
+              <div className="mt-2 flex flex-wrap items-center gap-2">
+                <p className="text-sm font-bold text-jade">
+                  {'price' in item
+                    ? money(item.price)
+                    : `${money(item.priceFrom)} - ${money(item.priceTo)}`}
+                </p>
+                <span className="rounded-full bg-black/5 px-2 py-1 text-xs font-semibold text-black/55">
+                  {item.status}
+                </span>
+              </div>
             </div>
-            <div className="flex gap-2">
+            <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
               <button className="btn-secondary" onClick={() => edit(item)}>
                 Editar
               </button>

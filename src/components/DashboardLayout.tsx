@@ -46,7 +46,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       : businessLinks;
 
   return (
-    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[220px_1fr]">
+    <main className="mx-auto grid max-w-6xl gap-6 px-4 py-6 md:grid-cols-[220px_1fr] md:py-8">
       <aside className="surface h-fit rounded-lg p-4">
         <p className="text-xs font-semibold uppercase tracking-wide text-jade">
           Panel
@@ -54,12 +54,12 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
         <p className="mt-1 text-sm font-semibold text-ink">
           {user?.name || 'Usuario'}
         </p>
-        <nav className="mt-5 grid gap-1">
+        <nav className="mt-5 flex gap-2 overflow-x-auto pb-1 md:grid md:overflow-visible md:pb-0">
           {visibleLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="rounded-md px-3 py-2 text-sm font-medium text-black/70 hover:bg-black/5"
+              className="whitespace-nowrap rounded-md px-3 py-2 text-sm font-medium text-black/70 hover:bg-black/5"
             >
               {link.label}
             </Link>

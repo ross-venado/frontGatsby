@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
 import { DashboardLayout } from '@/components/DashboardLayout';
+import { ImageUrlField } from '@/components/ImageUrlField';
 import { apiFetch } from '@/lib/api';
 import { getToken } from '@/lib/auth';
 import type { Business, BusinessCategory } from '@/types/mercadito';
@@ -11,13 +12,20 @@ export default function DashboardPage() {
   const [business, setBusiness] = useState<Business | null>(null);
   const [categories, setCategories] = useState<BusinessCategory[]>([]);
   const [message, setMessage] = useState('');
+  const [logoUrl, setLogoUrl] = useState('');
+  const [coverUrl, setCoverUrl] = useState('');
+  const [error, setError] = useState('');
 
   useEffect(() => {
     const token = getToken();
     if (!token) return;
 
     void apiFetch<Business>('/business/me', { token })
-      .then(setBusiness)
+      .then((data) => {
+        setBusiness(data);
+        setLogoUrl(data.logoUrl || '');
+        setCoverUrl(data.coverUrl || '');
+      })
       .catch(() => setBusiness(null));
 
     void apiFetch<BusinessCategory[]>('/public/categories')
@@ -27,6 +35,8 @@ export default function DashboardPage() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setError('');
+    setMessage('');
     const token = getToken();
     if (!token) return;
 
@@ -39,19 +49,27 @@ export default function DashboardPage() {
       phone: String(form.get('phone') || ''),
       whatsapp: String(form.get('whatsapp') || ''),
       address: String(form.get('address') || ''),
-      logoUrl: String(form.get('logoUrl') || ''),
-      coverUrl: String(form.get('coverUrl') || ''),
+      logoUrl,
+      coverUrl,
       modules: business?.modules?.length ? business.modules : ['marketplace'],
     };
 
-    const updated = await apiFetch<Business>('/business/me', {
-      method: 'PATCH',
-      token,
-      body: JSON.stringify(payload),
-    });
+    try {
+      const updated = await apiFetch<Business>('/business/me', {
+        method: 'PATCH',
+        token,
+        body: JSON.stringify(payload),
+      });
 
-    setBusiness(updated);
-    setMessage('Negocio guardado. Pide aprobacion al admin para aparecer publico.');
+      setBusiness(updated);
+      setMessage('Negocio guardado. Pide aprobacion al admin para aparecer publico.');
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : 'No se pudo guardar. Revisa las imagenes o intenta con links.',
+      );
+    }
   }
 
   return (
@@ -139,24 +157,23 @@ export default function DashboardPage() {
                 defaultValue={business?.address || ''}
               />
             </label>
-            <label className="block">
-              <span className="text-sm font-medium">Logo URL</span>
-              <input
-                className="field mt-1"
-                name="logoUrl"
-                defaultValue={business?.logoUrl || ''}
-              />
-            </label>
-            <label className="block">
-              <span className="text-sm font-medium">Cover URL</span>
-              <input
-                className="field mt-1"
-                name="coverUrl"
-                defaultValue={business?.coverUrl || ''}
-              />
-            </label>
+            <ImageUrlField
+              label="Logo"
+              name="logoUrl"
+              value={logoUrl}
+              onChange={setLogoUrl}
+              previewLabel="Logo del negocio"
+            />
+            <ImageUrlField
+              label="Portada"
+              name="coverUrl"
+              value={coverUrl}
+              onChange={setCoverUrl}
+              previewLabel="Portada del negocio"
+            />
             <div className="md:col-span-2">
               <button className="btn-primary">Guardar local</button>
+              {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
               {message ? <p className="mt-3 text-sm text-jade">{message}</p> : null}
             </div>
           </form>

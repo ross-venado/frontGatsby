@@ -58,6 +58,15 @@ export function whatsappUrl(phone?: string, businessName?: string) {
   return `https://wa.me/${normalized}?text=${text}`;
 }
 
+export function whatsappMessageUrl(phone?: string, message?: string) {
+  if (!phone || !message) {
+    return null;
+  }
+
+  const normalized = phone.replace(/[^\d]/g, '');
+  return `https://wa.me/${normalized}?text=${encodeURIComponent(message)}`;
+}
+
 export function mapsUrl(address?: string, location?: { lat: number; lng: number }) {
   if (location) {
     return `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;

@@ -16,15 +16,15 @@ export default function RootLayout({
     <html lang="es-GT">
       <body>
         <header className="border-b border-black/10 bg-white/85 backdrop-blur">
-          <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-            <Link href="/" className="font-bold text-ink">
+          <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-4">
+            <Link href="/" className="max-w-[170px] font-bold leading-tight text-ink sm:max-w-none">
               Mercadito Chimalteco
             </Link>
-            <nav className="flex items-center gap-2 text-sm">
-              <Link className="rounded-md px-3 py-2 hover:bg-black/5" href="/businesses">
+            <nav className="flex items-center gap-1 text-sm sm:gap-2">
+              <Link className="rounded-md px-2 py-2 hover:bg-black/5 sm:px-3" href="/businesses">
                 Negocios
               </Link>
-              <Link className="rounded-md px-3 py-2 hover:bg-black/5" href="/login">
+              <Link className="rounded-md px-2 py-2 hover:bg-black/5 sm:px-3" href="/login">
                 Login
               </Link>
               <Link className="btn-primary" href="/dashboard">
