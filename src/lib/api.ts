@@ -23,7 +23,25 @@ export async function apiFetch<T>(
 
   if (!response.ok) {
     const message = await response.text();
-    throw new Error(message || `API request failed with ${response.status}`);
+
+    if (response.status === 413) {
+      throw new Error(
+        'El archivo o la informacion enviada es demasiado grande. Usa una imagen mas liviana o pega un enlace de imagen.',
+      );
+    }
+
+    let parsedMessage = '';
+    try {
+      const parsed = JSON.parse(message) as { message?: string | string[] };
+      if (Array.isArray(parsed.message)) {
+        parsedMessage = parsed.message.join(', ');
+      } else {
+        parsedMessage = parsed.message || '';
+      }
+    } catch {
+      parsedMessage = message;
+    }
+    throw new Error(parsedMessage || `La API respondio con error ${response.status}`);
   }
 
   if (response.status === 204) {

@@ -21,6 +21,7 @@ type FormItem = {
   description: string;
   category: string;
   price: string;
+  stock: string;
   priceFrom: string;
   priceTo: string;
   imageUrl: string;
@@ -32,6 +33,7 @@ const emptyForm: FormItem = {
   description: '',
   category: '',
   price: '',
+  stock: '',
   priceFrom: '',
   priceTo: '',
   imageUrl: '',
@@ -44,6 +46,8 @@ export function ItemManager({ mode }: ItemManagerProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<FormItem>(emptyForm);
   const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const basePath = mode === 'products' ? '/business/products' : '/business/services';
   const title = mode === 'products' ? 'Productos' : 'Servicios';
@@ -75,10 +79,12 @@ export function ItemManager({ mode }: ItemManagerProps) {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (isSubmitting) return;
     setError('');
 
     const token = getToken();
     if (!token) return;
+    setIsSubmitting(true);
 
     const images = form.imageUrl ? [form.imageUrl] : [];
     const payload =
@@ -88,6 +94,7 @@ export function ItemManager({ mode }: ItemManagerProps) {
             description: form.description,
             category: form.category,
             price: Number(form.price || 0),
+            stock: form.stock ? Number(form.stock) : undefined,
             images,
             status: form.status,
           }
@@ -117,14 +124,24 @@ export function ItemManager({ mode }: ItemManagerProps) {
           ? err.message
           : 'No se pudo guardar. Revisa la imagen o intenta con un link.',
       );
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
   async function remove(id: string) {
     const token = getToken();
-    if (!token) return;
-    await apiFetch(`${basePath}/${id}`, { method: 'DELETE', token });
-    await load();
+    if (!token || deletingId) return;
+    setError('');
+    setDeletingId(id);
+    try {
+      await apiFetch(`${basePath}/${id}`, { method: 'DELETE', token });
+      await load();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'No se pudo eliminar');
+    } finally {
+      setDeletingId(null);
+    }
   }
 
   function edit(item: Product | Service) {
@@ -134,6 +151,7 @@ export function ItemManager({ mode }: ItemManagerProps) {
       description: item.description || '',
       category: item.category || '',
       price: 'price' in item ? String(item.price || '') : '',
+      stock: 'stock' in item && item.stock !== undefined ? String(item.stock) : '',
       priceFrom: 'priceFrom' in item ? String(item.priceFrom || '') : '',
       priceTo: 'priceTo' in item ? String(item.priceTo || '') : '',
       imageUrl: item.images?.[0] || '',
@@ -154,6 +172,7 @@ export function ItemManager({ mode }: ItemManagerProps) {
             <span className="text-sm font-medium">Nombre</span>
             <input
               className="field mt-1"
+              disabled={isSubmitting}
               value={form.name}
               onChange={(event) => setForm({ ...form, name: event.target.value })}
               required
@@ -163,6 +182,7 @@ export function ItemManager({ mode }: ItemManagerProps) {
             <span className="text-sm font-medium">Descripcion</span>
             <textarea
               className="field mt-1 min-h-20"
+              disabled={isSubmitting}
               value={form.description}
               onChange={(event) =>
                 setForm({ ...form, description: event.target.value })
@@ -173,6 +193,7 @@ export function ItemManager({ mode }: ItemManagerProps) {
             <span className="text-sm font-medium">Categoria interna</span>
             <select
               className="field mt-1"
+              disabled={isSubmitting}
               value={form.category}
               onChange={(event) =>
                 setForm({ ...form, category: event.target.value })
@@ -188,24 +209,42 @@ export function ItemManager({ mode }: ItemManagerProps) {
           </label>
 
           {mode === 'products' ? (
-            <label className="block">
-              <span className="text-sm font-medium">Precio</span>
-              <input
-                className="field mt-1"
-                type="number"
-                value={form.price}
-                onChange={(event) =>
-                  setForm({ ...form, price: event.target.value })
-                }
-                required
-              />
-            </label>
+            <div className="grid grid-cols-2 gap-3">
+              <label className="block">
+                <span className="text-sm font-medium">Precio</span>
+                <input
+                  className="field mt-1"
+                  disabled={isSubmitting}
+                  type="number"
+                  value={form.price}
+                  onChange={(event) =>
+                    setForm({ ...form, price: event.target.value })
+                  }
+                  required
+                />
+              </label>
+              <label className="block">
+                <span className="text-sm font-medium">Stock</span>
+                <input
+                  className="field mt-1"
+                  disabled={isSubmitting}
+                  min="0"
+                  type="number"
+                  value={form.stock}
+                  onChange={(event) =>
+                    setForm({ ...form, stock: event.target.value })
+                  }
+                  placeholder="Opcional"
+                />
+              </label>
+            </div>
           ) : (
             <div className="grid grid-cols-2 gap-3">
               <label className="block">
                 <span className="text-sm font-medium">Desde</span>
                 <input
                   className="field mt-1"
+                  disabled={isSubmitting}
                   type="number"
                   value={form.priceFrom}
                   onChange={(event) =>
@@ -217,6 +256,7 @@ export function ItemManager({ mode }: ItemManagerProps) {
                 <span className="text-sm font-medium">Hasta</span>
                 <input
                   className="field mt-1"
+                  disabled={isSubmitting}
                   type="number"
                   value={form.priceTo}
                   onChange={(event) =>
@@ -230,13 +270,18 @@ export function ItemManager({ mode }: ItemManagerProps) {
           <ImageUrlField
             label="Imagen"
             value={form.imageUrl}
-            onChange={(value) => setForm({ ...form, imageUrl: value })}
+            onChange={(value) => {
+              if (!isSubmitting) {
+                setForm({ ...form, imageUrl: value });
+              }
+            }}
             previewLabel={`Imagen de ${form.name || title}`}
           />
           <label className="block">
             <span className="text-sm font-medium">Estado</span>
             <select
               className="field mt-1"
+              disabled={isSubmitting}
               value={form.status}
               onChange={(event) =>
                 setForm({ ...form, status: event.target.value })
@@ -251,10 +296,16 @@ export function ItemManager({ mode }: ItemManagerProps) {
 
         {error ? <p className="mt-4 text-sm text-red-700">{error}</p> : null}
         <div className="mt-5 flex gap-2">
-          <button className="btn-primary">{editingId ? 'Actualizar' : 'Crear'}</button>
+          <button
+            className="btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? 'Guardando...' : editingId ? 'Actualizar' : 'Crear'}
+          </button>
           {editingId ? (
             <button
               className="btn-secondary"
+              disabled={isSubmitting}
               type="button"
               onClick={() => {
                 setEditingId(null);
@@ -296,14 +347,23 @@ export function ItemManager({ mode }: ItemManagerProps) {
                 <span className="rounded-full bg-black/5 px-2 py-1 text-xs font-semibold text-black/55">
                   {item.status}
                 </span>
+                {'stock' in item && item.stock !== undefined ? (
+                  <span className="rounded-full bg-jade/10 px-2 py-1 text-xs font-semibold text-jade">
+                    Stock {item.stock}
+                  </span>
+                ) : null}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:flex sm:shrink-0">
               <button className="btn-secondary" onClick={() => edit(item)}>
                 Editar
               </button>
-              <button className="btn-secondary" onClick={() => void remove(item._id)}>
-                Eliminar
+              <button
+                className="btn-secondary disabled:cursor-not-allowed disabled:opacity-60"
+                disabled={deletingId === item._id}
+                onClick={() => void remove(item._id)}
+              >
+                {deletingId === item._id ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
           </article>
