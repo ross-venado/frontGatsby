@@ -14,6 +14,14 @@ const links = [
   { href: '/dashboard/services', label: 'Servicios' },
 ];
 
+function businessCategorySlug(business: Business | null) {
+  if (!business?.categoryId || typeof business.categoryId !== 'object') {
+    return '';
+  }
+
+  return business.categoryId.slug;
+}
+
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -30,15 +38,37 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       .catch(() => setBusiness(null));
   }, []);
 
-  const businessLinks =
-    business?.modules?.includes('restaurant')
-      ? [
-          ...links,
-          { href: '/dashboard/restaurant', label: 'Restaurante' },
-          { href: '/dashboard/restaurant/tables', label: 'Mesas' },
-          { href: '/dashboard/restaurant/orders', label: 'Pedidos' },
-        ]
-      : [...links, { href: '/dashboard/restaurant', label: 'Restaurante' }];
+  const moduleLinks = [];
+
+  if (businessCategorySlug(business) === 'tiendas') {
+    moduleLinks.push({ href: '/dashboard/inventory', label: 'Inventario' });
+  }
+
+  if (business?.modules?.includes('restaurant')) {
+    moduleLinks.push(
+      { href: '/dashboard/restaurant', label: 'Restaurante' },
+      { href: '/dashboard/restaurant/tables', label: 'Mesas' },
+      { href: '/dashboard/restaurant/orders', label: 'Pedidos' },
+    );
+  }
+
+  if (business?.modules?.includes('quotes')) {
+    moduleLinks.push({ href: '/dashboard/quotes', label: 'Cotizaciones' });
+  }
+
+  if (business?.modules?.includes('appointments')) {
+    moduleLinks.push({ href: '/dashboard/appointments', label: 'Citas' });
+  }
+
+  if (business?.modules?.includes('automotive')) {
+    moduleLinks.push({ href: '/dashboard/automotive', label: 'Automotriz' });
+  }
+
+  if (business?.modules?.includes('workshop')) {
+    moduleLinks.push({ href: '/dashboard/workshop', label: 'Taller' });
+  }
+
+  const businessLinks = [...links, ...moduleLinks];
 
   const visibleLinks =
     user?.role === 'admin'
