@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import { BusinessWhatsAppOrder } from '@/components/BusinessWhatsAppOrder';
 import { BusinessQr } from '@/components/BusinessQr';
-import { EmptyState } from '@/components/EmptyState';
 import { apiFetch, mapsUrl, money, whatsappUrl } from '@/lib/api';
 import type { Business, Product, Service } from '@/types/mercadito';
 
@@ -84,33 +83,40 @@ export default async function BusinessPage({ params }: PageProps) {
       </section>
 
       <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-10 lg:grid-cols-[1fr_320px]">
-        <div>
+        {services.length ? (
           <div>
-            <h2 className="text-2xl font-bold text-ink">Servicios</h2>
-            <div className="mt-4 grid gap-4 md:grid-cols-2">
-              {services.length ? (
-                services.map((service) => (
-                  <article key={service._id} className="surface rounded-lg p-4">
-                    <h3 className="font-semibold text-ink">{service.name}</h3>
-                    <p className="mt-2 text-sm text-black/60">
+            <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
+              <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-wide text-jade">
+                    Tambien disponible
+                  </p>
+                  <h2 className="mt-1 text-2xl font-black text-ink">Servicios</h2>
+                </div>
+                <p className="text-sm text-black/55">
+                  Consulta disponibilidad directo con el negocio.
+                </p>
+              </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-2">
+                {services.slice(0, 4).map((service) => (
+                  <article key={service._id} className="rounded-xl border border-black/10 bg-black/[0.02] p-4">
+                    <h3 className="font-bold text-ink">{service.name}</h3>
+                    <p className="mt-2 line-clamp-2 text-sm text-black/60">
                       {service.description || service.category || 'Servicio del local'}
                     </p>
-                    <p className="mt-3 font-bold text-jade">
+                    <p className="mt-3 text-sm font-black text-jade">
                       Desde {money(service.priceFrom)}
                     </p>
                   </article>
-                ))
-              ) : (
-                <EmptyState
-                  title="Sin servicios publicados"
-                  description="Este negocio aun no ha activado servicios."
-                />
-              )}
+                ))}
+              </div>
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="hidden lg:block" />
+        )}
 
-        <aside id="qr" className="surface h-fit rounded-lg p-5">
+        <aside id="qr" className="surface h-fit rounded-2xl p-5">
           <h2 className="text-lg font-bold text-ink">QR del local</h2>
           <div className="mt-4">
             <BusinessQr value={publicUrl} label={`QR de ${business.name}`} />

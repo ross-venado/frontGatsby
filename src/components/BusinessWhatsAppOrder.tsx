@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/EmptyState';
 import { money, whatsappMessageUrl } from '@/lib/api';
 import type { Business, Product } from '@/types/mercadito';
@@ -17,6 +17,8 @@ type BusinessWhatsAppOrderProps = {
   publicUrl: string;
 };
 
+const PAGE_SIZE = 9;
+
 export function BusinessWhatsAppOrder({
   business,
   products,
@@ -28,11 +30,16 @@ export function BusinessWhatsAppOrder({
   const [notes, setNotes] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+  const [page, setPage] = useState(1);
   const [sent, setSent] = useState(false);
 
   const businessPhone = business.whatsapp || business.phone;
 
   function add(product: Product) {
+    if (product.status === 'sold_out') {
+      return;
+    }
+
     setSent(false);
     setCart((current) => {
       const existing = current.find((item) => item.product._id === product._id);
@@ -76,12 +83,22 @@ export function BusinessWhatsAppOrder({
     [cart],
   );
 
-  const categories = useMemo(() => {
+  const cartUnits = useMemo(
+    () => cart.reduce((sum, item) => sum + item.quantity, 0),
+    [cart],
+  );
+
+  const categoryOptions = useMemo(() => {
     const values = products
       .map((product) => product.category?.trim())
       .filter((value): value is string => Boolean(value));
 
-    return Array.from(new Set(values)).sort((a, b) => a.localeCompare(b));
+    return Array.from(new Set(values))
+      .sort((a, b) => a.localeCompare(b))
+      .map((name) => ({
+        name,
+        count: products.filter((product) => product.category === name).length,
+      }));
   }, [products]);
 
   const visibleProducts = useMemo(() => {
@@ -98,6 +115,17 @@ export function BusinessWhatsAppOrder({
       return matchesCategory && matchesQuery;
     });
   }, [category, products, search]);
+
+  const totalPages = Math.max(1, Math.ceil(visibleProducts.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pagedProducts = visibleProducts.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE,
+  );
+
+  useEffect(() => {
+    setPage(1);
+  }, [category, search]);
 
   const message = useMemo(() => {
     if (!cart.length) {
@@ -133,80 +161,77 @@ export function BusinessWhatsAppOrder({
   const canSend = Boolean(cart.length && whatsappOrderUrl);
 
   return (
-    <section id="pedido" className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]">
+    <section id="pedido" className="grid gap-6 pb-20 lg:grid-cols-[minmax(0,1fr)_380px] lg:pb-0">
       <div>
-        <div className="flex flex-col justify-between gap-3 xl:flex-row xl:items-end">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-wide text-jade">
-              Pedido por WhatsApp
-            </p>
-            <h2 className="mt-1 text-2xl font-bold text-ink">Productos</h2>
+        <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-soft sm:p-5">
+          <div className="flex flex-col justify-between gap-4 xl:flex-row xl:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-wide text-jade">
+                Catalogo del negocio
+              </p>
+              <h2 className="mt-1 text-2xl font-black text-ink sm:text-3xl">
+                Menu y productos
+              </h2>
+              <p className="mt-2 max-w-2xl text-sm text-black/60">
+                Explora por categoria, agrega productos y manda el pedido armado por WhatsApp.
+              </p>
+            </div>
+            <div className="grid grid-cols-2 overflow-hidden rounded-xl border border-black/10 bg-black/[0.03] text-center sm:w-72">
+              <div className="p-3">
+                <p className="text-lg font-black text-ink">{products.length}</p>
+                <p className="text-xs font-semibold text-black/50">productos</p>
+              </div>
+              <div className="border-l border-black/10 p-3">
+                <p className="text-lg font-black text-ink">{categoryOptions.length || 1}</p>
+                <p className="text-xs font-semibold text-black/50">categorias</p>
+              </div>
+            </div>
           </div>
-          <p className="max-w-md text-sm text-black/55">
-            Arma tu pedido y envialo con cantidades, notas y total estimado.
-          </p>
+
+          {products.length ? (
+            <div className="mt-5 space-y-4">
+              <input
+                className="field min-h-11"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar producto, bebida o categoria"
+              />
+              <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:px-0">
+                <button
+                  className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition ${
+                    category === 'all'
+                      ? 'border-jade bg-jade text-white'
+                      : 'border-black/10 bg-white text-ink hover:border-jade/40'
+                  }`}
+                  type="button"
+                  onClick={() => setCategory('all')}
+                >
+                  Todo · {products.length}
+                </button>
+                {categoryOptions.map((item) => (
+                  <button
+                    key={item.name}
+                    className={`shrink-0 rounded-full border px-4 py-2 text-sm font-bold transition ${
+                      category === item.name
+                        ? 'border-jade bg-jade text-white'
+                        : 'border-black/10 bg-white text-ink hover:border-jade/40'
+                    }`}
+                    type="button"
+                    onClick={() => setCategory(item.name)}
+                  >
+                    {item.name} · {item.count}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ) : null}
         </div>
 
-        {products.length ? (
-          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_220px]">
-            <input
-              className="field"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar producto"
-            />
-            <select
-              className="field"
-              value={category}
-              onChange={(event) => setCategory(event.target.value)}
-            >
-              <option value="all">Todas las categorias</option>
-              {categories.map((item) => (
-                <option key={item} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : null}
-
-        <div className="mt-4 grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:max-h-[720px] lg:overflow-y-auto lg:pr-2">
+        <div className="mt-5 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {products.length ? (
-            visibleProducts.length ? (
-              visibleProducts.map((product) => (
-                <article
-                  key={product._id}
-                  className="surface flex overflow-hidden rounded-lg sm:flex-col"
-                >
-                  <div className="h-auto w-28 shrink-0 bg-gradient-to-br from-jade/15 via-maize/20 to-clay/15 sm:h-36 sm:w-full">
-                    {product.images?.[0] ? (
-                      <div
-                        aria-hidden="true"
-                        className="h-full w-full bg-cover bg-center"
-                        style={{ backgroundImage: `url(${product.images[0]})` }}
-                      />
-                    ) : null}
-                  </div>
-                  <div className="flex min-w-0 flex-1 flex-col p-4">
-                    <h3 className="line-clamp-2 font-semibold text-ink">
-                      {product.name}
-                    </h3>
-                    <p className="mt-2 line-clamp-2 text-sm text-black/60">
-                      {product.description || product.category || 'Producto del local'}
-                    </p>
-                    <ProductDetails product={product} />
-                    <div className="mt-auto flex flex-col gap-3 pt-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
-                      <p className="font-bold text-jade">{money(product.price)}</p>
-                      <button
-                        className="btn-primary w-full min-[420px]:w-auto"
-                        type="button"
-                        onClick={() => add(product)}
-                      >
-                        Agregar
-                      </button>
-                    </div>
-                  </div>
-                </article>
+            pagedProducts.length ? (
+              pagedProducts.map((product) => (
+                <ProductCard key={product._id} product={product} onAdd={add} />
               ))
             ) : (
               <div className="md:col-span-2 xl:col-span-3">
@@ -223,9 +248,37 @@ export function BusinessWhatsAppOrder({
             />
           )}
         </div>
+
+        {visibleProducts.length > PAGE_SIZE ? (
+          <div className="mt-6 flex flex-col gap-3 rounded-2xl border border-black/10 bg-white p-4 shadow-soft sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-sm font-semibold text-black/60">
+              Mostrando {(currentPage - 1) * PAGE_SIZE + 1}-
+              {Math.min(currentPage * PAGE_SIZE, visibleProducts.length)} de{' '}
+              {visibleProducts.length}
+            </p>
+            <div className="grid grid-cols-2 gap-2 sm:flex">
+              <button
+                className="btn-secondary justify-center disabled:opacity-45"
+                type="button"
+                disabled={currentPage <= 1}
+                onClick={() => setPage((value) => Math.max(1, value - 1))}
+              >
+                Anterior
+              </button>
+              <button
+                className="btn-primary justify-center disabled:opacity-45"
+                type="button"
+                disabled={currentPage >= totalPages}
+                onClick={() => setPage((value) => Math.min(totalPages, value + 1))}
+              >
+                Ver mas
+              </button>
+            </div>
+          </div>
+        ) : null}
       </div>
 
-      <aside className="surface h-fit rounded-lg p-5 lg:sticky lg:top-6">
+      <aside id="resumen-pedido" className="surface h-fit rounded-2xl p-5 lg:sticky lg:top-6">
         <div className="flex items-start justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-ink">Tu pedido</h2>
@@ -234,7 +287,7 @@ export function BusinessWhatsAppOrder({
             </p>
           </div>
           <span className="rounded-full bg-jade/10 px-3 py-1 text-sm font-bold text-jade">
-            {cart.length}
+            {cartUnits}
           </span>
         </div>
 
@@ -364,7 +417,94 @@ export function BusinessWhatsAppOrder({
           </p>
         ) : null}
       </aside>
+
+      {cart.length ? (
+        <div className="fixed inset-x-3 bottom-3 z-30 rounded-2xl border border-black/10 bg-ink p-3 text-white shadow-2xl shadow-black/30 lg:hidden">
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-semibold text-white/60">Tu pedido</p>
+              <p className="truncate text-sm font-black">
+                {cartUnits} productos · {money(total)}
+              </p>
+            </div>
+            <a
+              className="shrink-0 rounded-xl bg-jade px-4 py-3 text-sm font-black text-white"
+              href="#resumen-pedido"
+            >
+              Ver carrito
+            </a>
+          </div>
+        </div>
+      ) : null}
     </section>
+  );
+}
+
+function ProductCard({
+  product,
+  onAdd,
+}: {
+  product: Product;
+  onAdd: (product: Product) => void;
+}) {
+  const isSoldOut = product.status === 'sold_out';
+
+  return (
+    <article className="group overflow-hidden rounded-2xl border border-black/10 bg-white shadow-soft transition hover:-translate-y-0.5 hover:border-jade/35">
+      <div className="relative h-36 overflow-hidden bg-gradient-to-br from-jade/20 via-maize/25 to-clay/15">
+        {product.images?.[0] ? (
+          <div
+            aria-hidden="true"
+            className="h-full w-full bg-cover bg-center transition duration-300 group-hover:scale-105"
+            style={{ backgroundImage: `url(${product.images[0]})` }}
+          />
+        ) : (
+          <div className="flex h-full items-center justify-center px-6 text-center">
+            <span className="text-xs font-black uppercase tracking-wide text-jade">
+              {product.category || 'Producto local'}
+            </span>
+          </div>
+        )}
+        {product.category ? (
+          <span className="absolute left-3 top-3 max-w-[calc(100%-1.5rem)] truncate rounded-full bg-white/90 px-3 py-1 text-[11px] font-black uppercase text-jade shadow-sm">
+            {product.category}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex min-h-60 flex-col p-4">
+        <div className="flex items-start justify-between gap-3">
+          <h3 className="line-clamp-2 text-base font-black text-ink">
+            {product.name}
+          </h3>
+          <p className="shrink-0 rounded-full bg-jade/10 px-3 py-1 text-sm font-black text-jade">
+            {money(product.price)}
+          </p>
+        </div>
+        <p className="mt-3 line-clamp-2 text-sm leading-6 text-black/60">
+          {product.description || 'Producto disponible en este local.'}
+        </p>
+        <ProductDetails product={product} />
+        <div className="mt-auto flex items-center justify-between gap-3 pt-4">
+          <span
+            className={`rounded-full px-3 py-1 text-xs font-bold ${
+              isSoldOut
+                ? 'bg-red-50 text-red-700'
+                : 'bg-black/[0.04] text-black/55'
+            }`}
+          >
+            {isSoldOut ? 'Agotado' : 'Disponible'}
+          </span>
+          <button
+            className="btn-primary min-h-11 px-5 disabled:cursor-not-allowed disabled:opacity-45"
+            type="button"
+            disabled={isSoldOut}
+            onClick={() => onAdd(product)}
+          >
+            Agregar
+          </button>
+        </div>
+      </div>
+    </article>
   );
 }
 
