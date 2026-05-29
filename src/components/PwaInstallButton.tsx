@@ -12,7 +12,10 @@ function isIos() {
     return false;
   }
 
-  return /iphone|ipad|ipod/i.test(navigator.userAgent);
+  return (
+    /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
 }
 
 function isStandalone() {
@@ -89,8 +92,8 @@ export function PwaInstallButton() {
         <div className="absolute right-0 top-12 z-20 w-72 rounded-lg border border-black/10 bg-white p-4 text-sm shadow-soft">
           <p className="font-bold text-ink">Guardar en tu celular</p>
           <p className="mt-2 text-black/60">
-            En iPhone abre Safari, toca Compartir y luego Agregar a pantalla de
-            inicio.
+            En iPhone o iPad debe ser desde Safari: toca Compartir y luego
+            Agregar a pantalla de inicio.
           </p>
         </div>
       ) : null}

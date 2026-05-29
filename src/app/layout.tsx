@@ -18,12 +18,19 @@ export const metadata: Metadata = {
     telephone: true,
   },
   icons: {
-    icon: '/icons/mercadito-icon.svg',
-    shortcut: '/icons/mercadito-icon.svg',
-    apple: '/icons/mercadito-icon.svg',
+    icon: [
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+      { url: '/icons/mercadito-icon.svg', type: 'image/svg+xml' },
+    ],
+    shortcut: '/icons/icon-192.png',
+    apple: [{ url: '/icons/apple-touch-icon.png', sizes: '180x180' }],
   },
   other: {
     'mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-capable': 'yes',
+    'apple-mobile-web-app-title': 'Mercadito',
+    'apple-mobile-web-app-status-bar-style': 'default',
   },
 };
 

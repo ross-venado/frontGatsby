@@ -194,6 +194,7 @@ export function BusinessWhatsAppOrder({
                     <p className="mt-2 line-clamp-2 text-sm text-black/60">
                       {product.description || product.category || 'Producto del local'}
                     </p>
+                    <ProductDetails product={product} />
                     <div className="mt-auto flex flex-col gap-3 pt-4 min-[420px]:flex-row min-[420px]:items-center min-[420px]:justify-between">
                       <p className="font-bold text-jade">{money(product.price)}</p>
                       <button
@@ -364,5 +365,50 @@ export function BusinessWhatsAppOrder({
         ) : null}
       </aside>
     </section>
+  );
+}
+
+function ProductDetails({ product }: { product: Product }) {
+  const attributes = product.attributes
+    ? Object.entries(product.attributes).filter(([, value]) => value !== undefined && value !== null && value !== '')
+    : [];
+
+  return (
+    <details className="mt-3 rounded-md border border-black/10 bg-white/70">
+      <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-ink">
+        Ver detalles
+      </summary>
+      <div className="space-y-3 border-t border-black/10 px-3 py-3 text-sm text-black/65">
+        {product.description ? <p>{product.description}</p> : null}
+        <div className="grid gap-2">
+          {product.category ? (
+            <DetailRow label="Categoria" value={product.category} />
+          ) : null}
+          {product.stock !== undefined ? (
+            <DetailRow label="Stock" value={String(product.stock)} />
+          ) : null}
+          <DetailRow label="Estado" value={product.status} />
+        </div>
+        {attributes.length ? (
+          <div className="rounded-md bg-black/[0.03] p-3">
+            <p className="font-semibold text-ink">Mas informacion</p>
+            <div className="mt-2 grid gap-1">
+              {attributes.map(([key, value]) => (
+                <DetailRow key={key} label={key} value={String(value)} />
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </details>
+  );
+}
+
+function DetailRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between gap-3">
+      <span className="text-black/45">{label}</span>
+      <span className="text-right font-medium text-ink">{value}</span>
+    </div>
   );
 }
