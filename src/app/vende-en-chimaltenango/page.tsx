@@ -47,6 +47,14 @@ const niches = [
   ['Herreria / PVC', 'Cotizaciones con medidas y detalles'],
 ];
 
+const developerLinks = [
+  ['Sitio de VTEMGT', 'https://vtemgt.com/'],
+  [
+    'TikTok CodeQuetzal',
+    'https://www.tiktok.com/@codequetzal?is_from_webapp=1&sender_device=pc',
+  ],
+];
+
 export const metadata: Metadata = {
   title: 'Vende en Chimaltenango | Mercadito Chimalteco',
   description:
@@ -245,6 +253,39 @@ export default function SellInChimaltenangoPage() {
             <a className="btn-primary min-h-12 px-5 text-base" href={whatsappHref}>
               Escribirme por WhatsApp
             </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-6xl px-4 pb-10 sm:pb-12">
+        <div className="rounded-3xl border border-black/10 bg-ink p-5 text-white shadow-soft sm:p-7">
+          <div className="grid gap-5 lg:grid-cols-[1fr_auto] lg:items-center">
+            <div>
+              <p className="text-sm font-black uppercase tracking-wide text-jade">
+                Quienes lo desarrollan
+              </p>
+              <h2 className="mt-2 text-3xl font-black leading-tight">
+                Hecho por VTEMGT / CodeQuetzal
+              </h2>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-white/65">
+                Construimos herramientas web para negocios locales: catalogos,
+                QR, pedidos por WhatsApp y modulos para restaurantes, tiendas,
+                servicios y otros nichos.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {developerLinks.map(([label, href]) => (
+                <a
+                  key={label}
+                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-5 text-sm font-black text-white transition hover:bg-white/15"
+                  href={href}
+                  rel="noreferrer"
+                  target="_blank"
+                >
+                  {label}
+                </a>
+              ))}
+            </div>
           </div>
         </div>
       </section>

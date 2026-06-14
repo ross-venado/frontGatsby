@@ -48,6 +48,14 @@ const niches = [
   ['Servicios profesionales', 'Citas y cotizaciones'],
 ];
 
+const developerLinks = [
+  ['Sitio oficial', 'https://vtemgt.com/'],
+  [
+    'TikTok CodeQuetzal',
+    'https://www.tiktok.com/@codequetzal?is_from_webapp=1&sender_device=pc',
+  ],
+];
+
 export default function PricingPage() {
   return (
     <PublicShell
@@ -105,6 +113,36 @@ export default function PricingPage() {
               <p className="mt-1 text-sm text-black/55">{module}</p>
             </div>
           ))}
+        </div>
+      </section>
+
+      <section className="mt-8 rounded-3xl border border-black/10 bg-ink p-5 text-white shadow-soft sm:p-6">
+        <div className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-jade">
+              Desarrollado localmente
+            </p>
+            <h2 className="mt-2 text-2xl font-black leading-tight">
+              Plataforma creada por VTEMGT / CodeQuetzal
+            </h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-white/65">
+              El desarrollo y soporte del mercadito esta a cargo de CodeQuetzal,
+              con enfoque en negocios locales, catalogos, QR y modulos por nicho.
+            </p>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row">
+            {developerLinks.map(([label, href]) => (
+              <a
+                key={label}
+                className="inline-flex min-h-11 items-center justify-center rounded-xl border border-white/15 bg-white/10 px-4 text-sm font-black text-white transition hover:bg-white/15"
+                href={href}
+                rel="noreferrer"
+                target="_blank"
+              >
+                {label}
+              </a>
+            ))}
+          </div>
         </div>
       </section>
     </PublicShell>
