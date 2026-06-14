@@ -51,6 +51,12 @@ export default function RootLayout({
               <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 sm:inline-flex sm:px-3" href="/businesses">
                 Negocios
               </Link>
+              <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 min-[430px]:inline-flex sm:px-3" href="/vende-en-chimaltenango">
+                Vender
+              </Link>
+              <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 md:inline-flex sm:px-3" href="/pricing">
+                Precios
+              </Link>
               <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 min-[390px]:inline-flex sm:px-3" href="/login">
                 Login
               </Link>

@@ -1,6 +1,7 @@
 import Link from 'next/link';
+import { BusinessShareKit } from '@/components/BusinessShareKit';
 import { BusinessWhatsAppOrder } from '@/components/BusinessWhatsAppOrder';
-import { BusinessQr } from '@/components/BusinessQr';
+import { TrackedWhatsAppLink } from '@/components/TrackedWhatsAppLink';
 import { apiFetch, mapsUrl, money, whatsappUrl } from '@/lib/api';
 import type { Business, Product, Service } from '@/types/mercadito';
 
@@ -19,6 +20,11 @@ export default async function BusinessPage({ params }: PageProps) {
   const whatsapp = whatsappUrl(business.whatsapp || business.phone, business.name);
   const map = mapsUrl(business.address, business.location);
   const publicUrl = `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/businesses/${business.slug}`;
+  const categorySlug =
+    business.categoryId && typeof business.categoryId === 'object'
+      ? business.categoryId.slug
+      : '';
+  const hasDigitalMenu = categorySlug === 'comida-y-restaurantes' || business.modules?.includes('restaurant');
 
   return (
     <main>
@@ -52,13 +58,23 @@ export default async function BusinessPage({ params }: PageProps) {
             </div>
             <div className="grid gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-wrap">
               {whatsapp ? (
-                <a className="btn-primary" href={whatsapp} target="_blank">
+                <TrackedWhatsAppLink
+                  businessSlug={business.slug}
+                  className="btn-primary"
+                  href={whatsapp}
+                  source="business_header"
+                >
                   Preguntar por WhatsApp
-                </a>
+                </TrackedWhatsAppLink>
               ) : null}
               {products.length ? (
                 <Link className="btn-secondary" href={`/businesses/${slug}#pedido`}>
                   Armar pedido
+                </Link>
+              ) : null}
+              {hasDigitalMenu ? (
+                <Link className="btn-secondary" href={`/m/${business.slug}`}>
+                  Ver menu digital
                 </Link>
               ) : null}
               {map ? (
@@ -82,7 +98,7 @@ export default async function BusinessPage({ params }: PageProps) {
         />
       </section>
 
-      <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-10 lg:grid-cols-[1fr_320px]">
+      <section className="mx-auto grid max-w-6xl gap-8 px-4 pb-10 lg:grid-cols-[minmax(0,1fr)_360px]">
         {services.length ? (
           <div>
             <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
@@ -116,14 +132,12 @@ export default async function BusinessPage({ params }: PageProps) {
           <div className="hidden lg:block" />
         )}
 
-        <aside id="qr" className="surface h-fit rounded-2xl p-5">
-          <h2 className="text-lg font-bold text-ink">QR del local</h2>
-          <div className="mt-4">
-            <BusinessQr value={publicUrl} label={`QR de ${business.name}`} />
-          </div>
-          <p className="mt-3 break-all text-sm text-black/60">
-            {publicUrl}
-          </p>
+        <aside id="qr" className="h-fit">
+          <BusinessShareKit
+            businessName={business.name}
+            publicUrl={publicUrl}
+            whatsapp={business.whatsapp || business.phone}
+          />
         </aside>
       </section>
     </main>

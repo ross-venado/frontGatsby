@@ -4,6 +4,12 @@ import { FormEvent, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch, money } from '@/lib/api';
+import {
+  businessCategorySlug,
+  moduleDefinitions,
+  modulesForPlanAndCategory,
+  recommendedModulesForCategory,
+} from '@/lib/business-modules';
 import { clearSession, getToken, getUser, saveSession } from '@/lib/auth';
 import type {
   AuthResponse,
@@ -19,13 +25,8 @@ type BackofficeSection = 'businesses' | 'categories' | 'plans';
 
 const planCodes: PlanCode[] = ['free', 'basic', 'plus', 'pro'];
 const statusOptions: BusinessStatus[] = ['draft', 'active', 'suspended'];
-const moduleOptions: Array<{ code: BusinessModule; label: string; hint: string }> = [
-  { code: 'restaurant', label: 'Restaurante', hint: 'Mesas y pedidos QR' },
-  { code: 'automotive', label: 'Automotriz', hint: 'Inventario vehiculos' },
-  { code: 'workshop', label: 'Taller', hint: 'Servicios y ordenes' },
-  { code: 'quotes', label: 'Cotizaciones', hint: 'Solicitudes con estado' },
-  { code: 'appointments', label: 'Citas', hint: 'Agenda basica' },
-];
+const moduleOptions = moduleDefinitions;
+const validSections: BackofficeSection[] = ['businesses', 'categories', 'plans'];
 
 export default function BackofficePage() {
   const router = useRouter();
@@ -66,6 +67,11 @@ export default function BackofficePage() {
   }
 
   useEffect(() => {
+    const tab = new URLSearchParams(window.location.search).get('tab');
+    if (tab && validSections.includes(tab as BackofficeSection)) {
+      setSection(tab as BackofficeSection);
+    }
+
     const user = getUser();
     const isAdmin = Boolean(getToken()) && user?.role === 'admin';
     setHasSession(isAdmin);
@@ -75,6 +81,13 @@ export default function BackofficePage() {
       setError(err instanceof Error ? err.message : 'No se pudo cargar backoffice'),
     );
   }, []);
+
+  function changeSection(nextSection: BackofficeSection) {
+    setSection(nextSection);
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', nextSection);
+    window.history.replaceState(null, '', url.toString());
+  }
 
   async function loginAdmin(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -148,6 +161,17 @@ export default function BackofficePage() {
     return updateBusiness(business._id, business.status, business.plan, modules);
   }
 
+  function applyRecommendedModules(business: Business) {
+    const categorySlug = businessCategorySlug(business);
+    const modules = modulesForPlanAndCategory(
+      business.plan,
+      categorySlug,
+      business.modules,
+    );
+
+    return updateBusiness(business._id, business.status, business.plan, modules);
+  }
+
   async function createCategory(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const token = getToken();
@@ -210,25 +234,31 @@ export default function BackofficePage() {
   }
 
   return (
-    <main className="mx-auto max-w-6xl px-4 py-8">
+    <main className="min-h-screen bg-[#f5f2ea] px-4 py-6">
+      <div className="mx-auto max-w-7xl">
       <div className="space-y-6">
-        <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <div className="overflow-hidden rounded-3xl border border-black/10 bg-ink text-white shadow-soft">
+          <div className="grid gap-5 p-5 md:grid-cols-[minmax(0,1fr)_auto] md:items-end md:p-7">
           <div>
             <p className="text-sm font-semibold uppercase tracking-wide text-jade">
               CodeQuetzal Backoffice
             </p>
-            <h1 className="mt-1 text-3xl font-bold text-ink">
+            <h1 className="mt-2 text-3xl font-black tracking-tight md:text-4xl">
               Operacion del mercadito
             </h1>
-            <p className="mt-2 max-w-2xl text-sm text-black/60">
+            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65">
               Gestiona negocios, planes, categorias y modulos premium desde una
               vista operativa.
             </p>
-            {error ? <p className="mt-3 text-sm text-red-700">{error}</p> : null}
+            {error ? (
+              <p className="mt-4 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+                {error}
+              </p>
+            ) : null}
           </div>
           {hasSession ? (
             <button
-              className="btn-secondary w-fit"
+              className="rounded-xl border border-white/15 bg-white/10 px-4 py-3 text-sm font-black text-white transition hover:bg-white/15"
               disabled={Boolean(pendingAction)}
               onClick={logoutAdmin}
               type="button"
@@ -236,6 +266,7 @@ export default function BackofficePage() {
               Salir
             </button>
           ) : null}
+          </div>
         </div>
 
         {hasSession ? (
@@ -247,28 +278,36 @@ export default function BackofficePage() {
               <StatCard label="Plus / Pro" value={stats.premium} />
             </section>
 
-            <nav className="surface flex flex-wrap gap-2 rounded-lg p-2">
+            <nav className="surface flex flex-wrap gap-2 rounded-2xl p-2">
               <SectionButton
                 active={section === 'businesses'}
                 label="Negocios"
-                onClick={() => setSection('businesses')}
+                onClick={() => changeSection('businesses')}
               />
               <SectionButton
                 active={section === 'categories'}
                 label="Categorias"
-                onClick={() => setSection('categories')}
+                onClick={() => changeSection('categories')}
               />
               <SectionButton
                 active={section === 'plans'}
                 label="Planes"
-                onClick={() => setSection('plans')}
+                onClick={() => changeSection('plans')}
               />
             </nav>
 
             {section === 'businesses' ? (
               <section className="space-y-3">
-                {businesses.map((business) => (
-                  <article key={business._id} className="surface rounded-lg p-5">
+                {businesses.map((business) => {
+                  const categorySlug = businessCategorySlug(business);
+                  const recommendedModules = recommendedModulesForCategory(categorySlug);
+                  const missingRecommendedModules = recommendedModules.filter(
+                    (moduleCode) => !business.modules.includes(moduleCode),
+                  );
+
+                  return (
+                  <article key={business._id} className="surface overflow-hidden rounded-2xl p-0">
+                    <div className="border-b border-black/10 bg-gradient-to-r from-white to-jade/5 p-5">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
@@ -279,6 +318,7 @@ export default function BackofficePage() {
                             {business.status}
                           </Badge>
                           <Badge tone="gray">Plan {business.plan}</Badge>
+                          {categorySlug ? <Badge tone="gray">{categorySlug}</Badge> : null}
                         </div>
                         <p className="mt-1 text-sm text-black/50">
                           /{business.slug}
@@ -288,6 +328,12 @@ export default function BackofficePage() {
                             ? business.modules.join(', ')
                             : 'Sin modulos activos'}
                         </p>
+                        {recommendedModules.length ? (
+                          <p className="mt-2 text-sm text-black/50">
+                            Recomendado para este nicho:{' '}
+                            {recommendedModules.join(', ')}
+                          </p>
+                        ) : null}
                       </div>
 
                       <div className="grid gap-3 sm:grid-cols-2 lg:w-[420px]">
@@ -323,14 +369,21 @@ export default function BackofficePage() {
                             className="field mt-1"
                             disabled={pendingAction === `business:${business._id}`}
                             value={business.plan}
-                            onChange={(event) =>
+                            onChange={(event) => {
+                              const nextPlan = event.target.value as PlanCode;
+                              const nextModules = modulesForPlanAndCategory(
+                                nextPlan,
+                                categorySlug,
+                                business.modules,
+                              );
+
                               void updateBusiness(
                                 business._id,
                                 business.status,
-                                event.target.value as PlanCode,
-                                business.modules,
-                              )
-                            }
+                                nextPlan,
+                                nextModules,
+                              );
+                            }}
                           >
                             {planCodes.map((plan) => (
                               <option key={plan} value={plan}>
@@ -341,14 +394,33 @@ export default function BackofficePage() {
                         </label>
                       </div>
                     </div>
+                    </div>
 
-                    <div className="mt-5 border-t border-black/10 pt-4">
-                      <p className="text-xs font-semibold uppercase tracking-wide text-black/45">
-                        Modulos premium
-                      </p>
+                    <div className="p-5">
+                      <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-wide text-black/45">
+                            Modulos premium
+                          </p>
+                          <p className="mt-1 text-sm text-black/55">
+                            Activa el adicional que corresponde al nicho o al plan comprado.
+                          </p>
+                        </div>
+                        {missingRecommendedModules.length ? (
+                          <button
+                            className="btn-secondary w-fit"
+                            disabled={pendingAction === `business:${business._id}`}
+                            onClick={() => void applyRecommendedModules(business)}
+                            type="button"
+                          >
+                            Aplicar recomendados
+                          </button>
+                        ) : null}
+                      </div>
                       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
                         {moduleOptions.map((moduleOption) => {
                           const enabled = business.modules.includes(moduleOption.code);
+                          const recommended = recommendedModules.includes(moduleOption.code);
                           return (
                             <button
                               key={moduleOption.code}
@@ -365,6 +437,8 @@ export default function BackofficePage() {
                                   ? 'Guardando · '
                                   : enabled
                                     ? 'Activo · '
+                                    : recommended
+                                      ? 'Sugerido · '
                                     : ''}
                                 {moduleOption.label}
                               </span>
@@ -377,7 +451,8 @@ export default function BackofficePage() {
                       </div>
                     </div>
                   </article>
-                ))}
+                  );
+                })}
               </section>
             ) : null}
 
@@ -545,6 +620,7 @@ export default function BackofficePage() {
             </form>
           </section>
         )}
+      </div>
       </div>
     </main>
   );

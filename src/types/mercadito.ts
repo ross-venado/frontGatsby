@@ -8,6 +8,7 @@ export type CatalogCategoryType = 'product' | 'service' | 'both';
 export type BusinessModule =
   | 'marketplace'
   | 'restaurant'
+  | 'inventory'
   | 'automotive'
   | 'workshop'
   | 'quotes'

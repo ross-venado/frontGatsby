@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
+import { BusinessShareKit } from '@/components/BusinessShareKit';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { apiFetch } from '@/lib/api';
 import { getToken } from '@/lib/auth';
+import { siteBaseUrl } from '@/lib/config';
 import type { Business } from '@/types/mercadito';
 
 export default function RestaurantDashboardPage() {
@@ -20,6 +22,7 @@ export default function RestaurantDashboardPage() {
   }, []);
 
   const hasRestaurant = business?.modules?.includes('restaurant');
+  const publicMenuUrl = business?.slug ? `${siteBaseUrl}/m/${business.slug}` : '';
 
   return (
     <AuthGuard>
@@ -35,7 +38,13 @@ export default function RestaurantDashboardPage() {
                 Maneja mesas, links QR y pedidos simples desde el menu digital del
                 negocio.
               </p>
-              <div className="mt-6 grid gap-4 md:grid-cols-2">
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <Link className="surface rounded-lg p-5 hover:border-jade" href={publicMenuUrl || '/dashboard/products'}>
+                  <h2 className="text-xl font-bold text-ink">Menu QR publico</h2>
+                  <p className="mt-2 text-sm text-black/60">
+                    Comparte un menu digital para mostrador, redes o delivery.
+                  </p>
+                </Link>
                 <Link className="surface rounded-lg p-5 hover:border-jade" href="/dashboard/restaurant/tables">
                   <h2 className="text-xl font-bold text-ink">Mesas</h2>
                   <p className="mt-2 text-sm text-black/60">
@@ -49,6 +58,15 @@ export default function RestaurantDashboardPage() {
                   </p>
                 </Link>
               </div>
+              {business && publicMenuUrl ? (
+                <div className="mt-6 max-w-md">
+                  <BusinessShareKit
+                    businessName={`${business.name} - Menu`}
+                    publicUrl={publicMenuUrl}
+                    whatsapp={business.whatsapp || business.phone}
+                  />
+                </div>
+              ) : null}
             </>
           ) : (
             <div className="mt-5 rounded-lg bg-maize/15 p-5">

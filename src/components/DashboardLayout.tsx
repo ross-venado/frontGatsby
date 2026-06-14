@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { activeModuleLinks } from '@/lib/business-modules';
 import { clearSession, getUser } from '@/lib/auth';
 import type { AuthUser, Business } from '@/types/mercadito';
 
@@ -13,14 +14,6 @@ const links = [
   { href: '/dashboard/products', label: 'Productos' },
   { href: '/dashboard/services', label: 'Servicios' },
 ];
-
-function businessCategorySlug(business: Business | null) {
-  if (!business?.categoryId || typeof business.categoryId !== 'object') {
-    return '';
-  }
-
-  return business.categoryId.slug;
-}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -39,37 +32,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       .catch(() => setBusiness(null));
   }, []);
 
-  const moduleLinks = [];
-
-  if (businessCategorySlug(business) === 'tiendas') {
-    moduleLinks.push({ href: '/dashboard/inventory', label: 'Inventario' });
-  }
-
-  if (business?.modules?.includes('restaurant')) {
-    moduleLinks.push(
-      { href: '/dashboard/restaurant', label: 'Restaurante' },
-      { href: '/dashboard/restaurant/tables', label: 'Mesas' },
-      { href: '/dashboard/restaurant/orders', label: 'Pedidos' },
-    );
-  }
-
-  if (business?.modules?.includes('quotes')) {
-    moduleLinks.push({ href: '/dashboard/quotes', label: 'Cotizaciones' });
-  }
-
-  if (business?.modules?.includes('appointments')) {
-    moduleLinks.push({ href: '/dashboard/appointments', label: 'Citas' });
-  }
-
-  if (business?.modules?.includes('automotive')) {
-    moduleLinks.push({ href: '/dashboard/automotive', label: 'Automotriz' });
-  }
-
-  if (business?.modules?.includes('workshop')) {
-    moduleLinks.push({ href: '/dashboard/workshop', label: 'Taller' });
-  }
-
-  const businessLinks = [...links, ...moduleLinks];
+  const businessLinks = [...links, ...activeModuleLinks(business)];
 
   const visibleLinks =
     user?.role === 'admin'

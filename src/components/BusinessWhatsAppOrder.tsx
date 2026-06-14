@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { EmptyState } from '@/components/EmptyState';
-import { money, whatsappMessageUrl } from '@/lib/api';
+import { money, trackPublicBusinessEvent, whatsappMessageUrl } from '@/lib/api';
 import type { Business, Product } from '@/types/mercadito';
 
 type CartItem = {
@@ -32,6 +32,7 @@ export function BusinessWhatsAppOrder({
   const [category, setCategory] = useState('all');
   const [page, setPage] = useState(1);
   const [sent, setSent] = useState(false);
+  const [viewedProductIds, setViewedProductIds] = useState<Set<string>>(new Set());
 
   const businessPhone = business.whatsapp || business.phone;
 
@@ -41,6 +42,11 @@ export function BusinessWhatsAppOrder({
     }
 
     setSent(false);
+    trackPublicBusinessEvent(business.slug, 'order_started', {
+      productId: product._id,
+      productSlug: product.slug,
+      productName: product.name,
+    });
     setCart((current) => {
       const existing = current.find((item) => item.product._id === product._id);
 
@@ -53,6 +59,20 @@ export function BusinessWhatsAppOrder({
       }
 
       return [...current, { product, quantity: 1, notes: '' }];
+    });
+  }
+
+  function trackProductView(product: Product) {
+    if (viewedProductIds.has(product._id)) {
+      return;
+    }
+
+    setViewedProductIds((current) => new Set(current).add(product._id));
+    trackPublicBusinessEvent(business.slug, 'product_view', {
+      productId: product._id,
+      productSlug: product.slug,
+      productName: product.name,
+      category: product.category,
     });
   }
 
@@ -231,7 +251,12 @@ export function BusinessWhatsAppOrder({
           {products.length ? (
             pagedProducts.length ? (
               pagedProducts.map((product) => (
-                <ProductCard key={product._id} product={product} onAdd={add} />
+                <ProductCard
+                  key={product._id}
+                  product={product}
+                  onAdd={add}
+                  onView={trackProductView}
+                />
               ))
             ) : (
               <div className="md:col-span-2 xl:col-span-3">
@@ -401,7 +426,14 @@ export function BusinessWhatsAppOrder({
             className="btn-primary mt-4 w-full justify-center"
             href={whatsappOrderUrl || '#'}
             target="_blank"
-            onClick={() => setSent(true)}
+            onClick={() => {
+              setSent(true);
+              trackPublicBusinessEvent(business.slug, 'whatsapp_click', {
+                source: 'order_cart',
+                items: cartUnits,
+                total,
+              });
+            }}
           >
             Enviar por WhatsApp
           </a>
@@ -443,9 +475,11 @@ export function BusinessWhatsAppOrder({
 function ProductCard({
   product,
   onAdd,
+  onView,
 }: {
   product: Product;
   onAdd: (product: Product) => void;
+  onView: (product: Product) => void;
 }) {
   const isSoldOut = product.status === 'sold_out';
 
@@ -483,7 +517,7 @@ function ProductCard({
         <p className="mt-3 line-clamp-2 text-sm leading-6 text-black/60">
           {product.description || 'Producto disponible en este local.'}
         </p>
-        <ProductDetails product={product} />
+        <ProductDetails product={product} onView={() => onView(product)} />
         <div className="mt-auto flex items-center justify-between gap-3 pt-4">
           <span
             className={`rounded-full px-3 py-1 text-xs font-bold ${
@@ -508,13 +542,26 @@ function ProductCard({
   );
 }
 
-function ProductDetails({ product }: { product: Product }) {
+function ProductDetails({
+  product,
+  onView,
+}: {
+  product: Product;
+  onView: () => void;
+}) {
   const attributes = product.attributes
     ? Object.entries(product.attributes).filter(([, value]) => value !== undefined && value !== null && value !== '')
     : [];
 
   return (
-    <details className="mt-3 rounded-md border border-black/10 bg-white/70">
+    <details
+      className="mt-3 rounded-md border border-black/10 bg-white/70"
+      onToggle={(event) => {
+        if (event.currentTarget.open) {
+          onView();
+        }
+      }}
+    >
       <summary className="cursor-pointer list-none px-3 py-2 text-sm font-semibold text-ink">
         Ver detalles
       </summary>

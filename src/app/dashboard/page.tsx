@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { FormEvent, useEffect, useMemo, useState } from 'react';
 import { AuthGuard } from '@/components/AuthGuard';
+import { BusinessShareKit } from '@/components/BusinessShareKit';
 import { DashboardLayout } from '@/components/DashboardLayout';
 import { ImageUrlField } from '@/components/ImageUrlField';
 import { apiFetch, money } from '@/lib/api';
@@ -43,8 +44,10 @@ export default function DashboardPage() {
   const [coverUrl, setCoverUrl] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const [siteOrigin, setSiteOrigin] = useState('');
 
   useEffect(() => {
+    setSiteOrigin(window.location.origin);
     const token = getToken();
     if (!token) return;
 
@@ -126,11 +129,6 @@ export default function DashboardPage() {
     [dashboardData.products],
   );
 
-  const soldOutProducts = useMemo(
-    () => dashboardData.products.filter((product) => product.status === 'sold_out'),
-    [dashboardData.products],
-  );
-
   const activeOrders = useMemo(
     () =>
       dashboardData.orders.filter(
@@ -171,7 +169,29 @@ export default function DashboardPage() {
       .slice(0, 4);
   }, [activeProducts]);
 
-  const publicUrl = business ? `/businesses/${business.slug}` : '/businesses';
+  const publicPath = business ? `/businesses/${business.slug}` : '/businesses';
+  const publicUrl = siteOrigin ? `${siteOrigin}${publicPath}` : publicPath;
+
+  const onboardingSteps = [
+    {
+      title: 'Configura tu local',
+      description: 'Nombre, descripcion, categoria, logo y portada.',
+      done: profileScore >= 70,
+      href: '#perfil',
+    },
+    {
+      title: 'Carga tu catalogo',
+      description: 'Productos, precios, fotos y estado para vender por WhatsApp.',
+      done: activeProducts.length > 0,
+      href: '/dashboard/products',
+    },
+    {
+      title: 'Comparte tu enlace',
+      description: 'Copia el link, descarga el QR o mandalo por WhatsApp.',
+      done: Boolean(business?.status === 'active'),
+      href: '#compartir',
+    },
+  ];
 
   return (
     <AuthGuard>
@@ -190,7 +210,7 @@ export default function DashboardPage() {
                   Revisa el estado del catalogo, mantiene tus datos listos y entra rapido a las tareas que generan pedidos.
                 </p>
                 <div className="mt-5 flex flex-wrap gap-2">
-                  <Link className="rounded-xl bg-jade px-4 py-3 text-sm font-black text-white" href={publicUrl}>
+                  <Link className="rounded-xl bg-jade px-4 py-3 text-sm font-black text-white" href={publicPath}>
                     Ver local
                   </Link>
                   <Link className="rounded-xl bg-white/10 px-4 py-3 text-sm font-black text-white hover:bg-white/15" href="/dashboard/products">
@@ -219,14 +239,53 @@ export default function DashboardPage() {
           </section>
 
           <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard label="Productos activos" value={activeProducts.length} hint={`${soldOutProducts.length} agotados`} />
-            <MetricCard label="Servicios" value={dashboardData.services.length} hint="Publicados en el local" />
             <MetricCard label="Visitas al local" value={analyticsMap.business_view || 0} hint="Veces que abrieron tu pagina publica" />
-            <MetricCard label="Pedidos activos" value={activeOrders.length} hint={money(orderAmount)} />
+            <MetricCard label="Productos vistos" value={analyticsMap.product_view || 0} hint={`${activeProducts.length} productos activos`} />
+            <MetricCard label="Clicks a WhatsApp" value={analyticsMap.whatsapp_click || 0} hint="Clientes que pidieron contacto" />
+            <MetricCard label="Pedidos iniciados" value={analyticsMap.order_started || activeOrders.length} hint={activeOrders.length ? money(orderAmount) : 'Desde catalogo publico'} />
           </section>
 
           <section className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
             <div className="space-y-6">
+              <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
+                <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+                  <div>
+                    <p className="text-xs font-bold uppercase tracking-wide text-jade">
+                      Guia rapida
+                    </p>
+                    <h2 className="mt-1 text-2xl font-black text-ink">
+                      Publica sin complicarte
+                    </h2>
+                  </div>
+                  <span className="rounded-full bg-black/[0.04] px-3 py-1 text-xs font-bold text-black/50">
+                    {onboardingSteps.filter((step) => step.done).length}/{onboardingSteps.length} listo
+                  </span>
+                </div>
+                <div className="mt-5 grid gap-3 md:grid-cols-3">
+                  {onboardingSteps.map((step, index) => (
+                    <Link
+                      key={step.title}
+                      className={`rounded-xl border p-4 transition hover:-translate-y-0.5 ${
+                        step.done
+                          ? 'border-jade/30 bg-jade/5'
+                          : 'border-black/10 bg-black/[0.02]'
+                      }`}
+                      href={step.href}
+                    >
+                      <span className={`inline-flex h-8 w-8 items-center justify-center rounded-full text-sm font-black ${
+                        step.done ? 'bg-jade text-white' : 'bg-ink text-white'
+                      }`}>
+                        {step.done ? 'OK' : index + 1}
+                      </span>
+                      <p className="mt-3 font-black text-ink">{step.title}</p>
+                      <p className="mt-1 text-sm leading-6 text-black/55">
+                        {step.description}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
               <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
                 <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
                   <div>
@@ -292,12 +351,23 @@ export default function DashboardPage() {
             </div>
 
             <aside className="space-y-6">
+              {business ? (
+                <div id="compartir">
+                  <BusinessShareKit
+                    businessName={business.name}
+                    publicUrl={publicUrl}
+                    whatsapp={business.whatsapp || business.phone}
+                  />
+                </div>
+              ) : null}
+
               <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
                 <h2 className="text-xl font-black text-ink">Acceso rapido</h2>
                 <div className="mt-4 grid gap-2">
                   <QuickAction href="/dashboard/products" title="Productos" description="Precios, fotos y estado" />
                   <QuickAction href="/dashboard/categories" title="Categorias" description="Ordena tu catalogo" />
                   <QuickAction href="/dashboard/services" title="Servicios" description="Consultas o trabajos" />
+                  <QuickAction href={publicPath} title="Vista publica" description="Revisa como te ven tus clientes" />
                   {business?.modules?.includes('restaurant') ? (
                     <QuickAction href="/dashboard/restaurant/orders" title="Pedidos restaurante" description="Mesas y comandas" />
                   ) : null}
@@ -345,7 +415,7 @@ function MetricCard({
   hint: string;
 }) {
   return (
-    <div className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
+    <div id="perfil" className="rounded-2xl border border-black/10 bg-white p-5 shadow-soft">
       <p className="text-sm font-bold text-black/50">{label}</p>
       <p className="mt-2 text-3xl font-black text-ink">{value}</p>
       <p className="mt-1 text-sm text-black/50">{hint}</p>

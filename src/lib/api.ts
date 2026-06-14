@@ -96,3 +96,32 @@ export function mapsUrl(address?: string, location?: { lat: number; lng: number 
 
   return null;
 }
+
+export type PublicAnalyticsEvent =
+  | 'business_view'
+  | 'whatsapp_click'
+  | 'product_view'
+  | 'service_view'
+  | 'order_started';
+
+export function trackPublicBusinessEvent(
+  businessSlug: string,
+  type: PublicAnalyticsEvent,
+  metadata: Record<string, unknown> = {},
+) {
+  const payload = JSON.stringify({ type, metadata });
+  const url = `${apiBaseUrl}/public/businesses/${businessSlug}/analytics`;
+
+  if (typeof navigator !== 'undefined' && navigator.sendBeacon) {
+    const blob = new Blob([payload], { type: 'application/json' });
+    navigator.sendBeacon(url, blob);
+    return;
+  }
+
+  void fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: payload,
+    keepalive: true,
+  }).catch(() => undefined);
+}

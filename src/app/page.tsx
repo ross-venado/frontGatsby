@@ -18,12 +18,12 @@ export default async function HomePage() {
     <main className="overflow-x-hidden bg-[#f8f6f0]">
       <section className="relative isolate overflow-hidden border-b border-black/10 bg-[#f8f6f0]">
         <div className="absolute inset-x-0 top-0 -z-10 h-[68%] bg-[linear-gradient(135deg,#fff7df_0%,#eaf5ef_44%,#f6dfd2_100%)]" />
-        <div className="mx-auto grid max-w-6xl gap-7 px-4 py-7 sm:py-12 lg:min-h-[calc(100svh-76px)] lg:grid-cols-[minmax(0,1fr)_430px] lg:items-center lg:py-14">
-          <div className="min-w-0 max-w-3xl">
+        <div className="mx-auto grid max-w-6xl gap-7 px-4 py-7 sm:py-12 lg:min-h-[calc(100svh-76px)] lg:grid-cols-[minmax(0,620px)_minmax(360px,430px)] lg:items-center lg:justify-between lg:py-14">
+          <div className="min-w-0 max-w-2xl">
             <div className="inline-flex max-w-full rounded-full border border-jade/20 bg-white/70 px-3 py-2 text-[10px] font-bold uppercase tracking-wide text-jade shadow-sm backdrop-blur sm:px-4 sm:text-xs">
               Mercadito local by CodeQuetzal
             </div>
-            <h1 className="mt-5 max-w-[11ch] text-[clamp(2.1rem,12vw,5.7rem)] font-black leading-[0.96] tracking-normal text-ink sm:max-w-none">
+            <h1 className="mt-5 max-w-[14ch] text-[clamp(2.45rem,8vw,4.85rem)] font-black leading-[0.96] tracking-normal text-ink sm:max-w-[13ch] lg:text-[4.65rem]">
               Chimaltenango a un toque
             </h1>
             <p className="mt-5 max-w-2xl text-sm leading-7 text-black/68 sm:text-lg sm:leading-8">
@@ -34,7 +34,7 @@ export default async function HomePage() {
               <Link className="btn-primary min-h-12 px-4 text-sm sm:px-5 sm:text-base" href="/businesses">
                 Explorar locales
               </Link>
-              <Link className="btn-secondary min-h-12 px-4 text-sm sm:px-5 sm:text-base" href="/login">
+              <Link className="btn-secondary min-h-12 px-4 text-sm sm:px-5 sm:text-base" href="/vende-en-chimaltenango">
                 Crear mi local
               </Link>
             </div>
@@ -43,7 +43,7 @@ export default async function HomePage() {
               {categoryPreview.map((category) => (
                 <Link
                   key={category._id}
-                  href="/businesses"
+                  href={`/businesses?category=${category.slug}`}
                   className="shrink-0 rounded-full border border-black/10 bg-white/80 px-3 py-2 text-xs font-semibold text-ink shadow-sm sm:px-4 sm:text-sm"
                 >
                   {category.name}
@@ -68,7 +68,7 @@ export default async function HomePage() {
           </div>
 
           <div className="relative min-w-0">
-            <div className="absolute -right-4 -top-4 hidden rounded-full bg-jade px-4 py-2 text-sm font-bold text-white shadow-soft sm:block">
+            <div className="absolute right-4 top-4 z-10 hidden rounded-full bg-jade px-4 py-2 text-sm font-bold text-white shadow-soft sm:block">
               QR listo
             </div>
             <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl shadow-black/15 sm:rounded-[1.65rem]">
@@ -151,6 +151,34 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="border-b border-black/10 bg-ink text-white">
+        <div className="mx-auto grid max-w-6xl gap-6 px-4 py-8 md:grid-cols-[1.1fr_0.9fr] md:items-center">
+          <div>
+            <p className="text-xs font-black uppercase tracking-wide text-jade">
+              Para vender sin complicarse
+            </p>
+            <h2 className="mt-2 text-2xl font-black leading-tight sm:text-3xl">
+              Un enlace publico, un QR para compartir y un panel para ordenar el negocio.
+            </h2>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              ['01', 'Publica catalogo'],
+              ['02', 'Recibe consultas'],
+              ['03', 'Activa modulos'],
+            ].map(([step, label]) => (
+              <div key={step} className="rounded-2xl border border-white/10 bg-white/10 p-4">
+                <p className="text-xs font-black text-jade">{step}</p>
+                <p className="mt-2 text-sm font-black text-white">{label}</p>
+              </div>
+            ))}
+          </div>
+          <Link className="btn-primary justify-center md:col-span-2 md:w-fit" href="/vende-en-chimaltenango">
+            Quiero vender aqui
+          </Link>
+        </div>
+      </section>
+
       <section className="mx-auto max-w-6xl px-4 py-10 sm:py-12">
         <div className="mb-5 flex items-end justify-between gap-4">
           <div className="min-w-0 max-w-2xl">
@@ -171,7 +199,7 @@ export default async function HomePage() {
             {categories.map((category, index) => (
               <Link
                 key={category._id}
-                href="/businesses"
+                href={`/businesses?category=${category.slug}`}
                 className="surface min-w-[210px] rounded-xl p-4 transition hover:-translate-y-0.5 hover:border-jade/40 sm:min-w-0"
               >
                 <p className="text-xs font-semibold uppercase tracking-wide text-black/40">
