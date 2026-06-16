@@ -58,6 +58,25 @@ export const moduleDefinitions: ModuleDefinition[] = [
     href: '/dashboard/workshop',
     categorySlugs: ['talleres-mecanicos', 'polarizado-y-detailing'],
   },
+  {
+    code: 'live_sales',
+    label: 'Venta en vivo',
+    hint: 'Producto actual, historial y solicitudes por WhatsApp',
+    href: '/dashboard/live',
+    categorySlugs: [
+      'comida-y-restaurantes',
+      'tiendas',
+      'tecnologia',
+      'repuestos-y-accesorios',
+      'importadores-de-carros',
+      'talleres-mecanicos',
+      'polarizado-y-detailing',
+      'pvc-vidrio-y-aluminio',
+      'herreria',
+      'belleza-y-citas',
+      'servicios-profesionales',
+    ],
+  },
 ];
 
 export function businessCategorySlug(business: Business | null) {
@@ -103,16 +122,7 @@ export function activeModuleLinks(business: Business | null) {
     return [];
   }
 
-  const categorySlug = businessCategorySlug(business);
   const enabledModules = new Set<BusinessModule>(business.modules || []);
-
-  if (categorySlug === 'tiendas') {
-    enabledModules.add('inventory');
-  }
-
-  if (categorySlug === 'comida-y-restaurantes') {
-    enabledModules.add('restaurant');
-  }
 
   return moduleDefinitions
     .filter((moduleDefinition) => enabledModules.has(moduleDefinition.code))

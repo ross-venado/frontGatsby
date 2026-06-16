@@ -1,9 +1,9 @@
 'use client';
 
-import { FormEvent, useState } from 'react';
+import { FormEvent, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { apiFetch } from '@/lib/api';
-import { saveSession } from '@/lib/auth';
+import { getToken, getUser, saveSession } from '@/lib/auth';
 import type { AuthResponse } from '@/types/mercadito';
 
 export default function LoginPage() {
@@ -11,6 +11,12 @@ export default function LoginPage() {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!getToken()) return;
+    const user = getUser();
+    router.replace(user?.role === 'admin' ? '/cq-backoffice' : '/dashboard');
+  }, [router]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

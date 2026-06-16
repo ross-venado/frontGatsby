@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { PwaInstallButton } from '@/components/PwaInstallButton';
 import { PwaRegister } from '@/components/PwaRegister';
+import { SiteNav } from '@/components/SiteNav';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -47,24 +48,10 @@ export default function RootLayout({
             <Link href="/" className="max-w-[118px] text-sm font-bold leading-tight text-ink sm:max-w-none sm:text-base">
               Mercadito Chimalteco
             </Link>
-            <nav className="flex min-w-0 items-center gap-1 text-xs sm:gap-2 sm:text-sm">
-              <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 sm:inline-flex sm:px-3" href="/businesses">
-                Negocios
-              </Link>
-              <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 min-[430px]:inline-flex sm:px-3" href="/vende-en-chimaltenango">
-                Vender
-              </Link>
-              <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 md:inline-flex sm:px-3" href="/pricing">
-                Precios
-              </Link>
-              <Link className="hidden rounded-md px-2 py-2 hover:bg-black/5 min-[390px]:inline-flex sm:px-3" href="/login">
-                Login
-              </Link>
-              <Link className="btn-primary" href="/dashboard">
-                Panel
-              </Link>
+            <div className="flex min-w-0 items-center gap-1 sm:gap-2">
+              <SiteNav />
               <PwaInstallButton />
-            </nav>
+            </div>
           </div>
         </header>
         {children}

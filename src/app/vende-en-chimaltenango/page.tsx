@@ -22,13 +22,23 @@ const packages = [
     price: 'Q 199',
     description: 'Para negocios que quieren ordenar mejor sus consultas.',
     highlighted: true,
-    features: ['Hasta 30 productos', 'Modulo segun nicho', 'Metricas basicas', 'Acciones para compartir'],
+    features: [
+      'Hasta 30 productos',
+      'Modulo segun nicho',
+      'Venta en vivo con historial',
+      'Metricas basicas',
+    ],
   },
   {
     name: 'Pro',
     price: 'Q 349',
     description: 'Para locales con mas movimiento o catalogo amplio.',
-    features: ['Hasta 100 productos', 'Modulo avanzado', 'Soporte prioritario', 'Mejoras operativas'],
+    features: [
+      'Hasta 100 productos',
+      'Modulo avanzado',
+      'Venta en vivo avanzada',
+      'Soporte prioritario',
+    ],
   },
 ];
 
@@ -39,12 +49,12 @@ const steps = [
 ];
 
 const niches = [
-  ['Restaurantes', 'Menu, mesas y pedidos por WhatsApp'],
-  ['Tiendas', 'Catalogo, inventario y cotizaciones'],
-  ['Servicios', 'Agenda futura y solicitudes ordenadas'],
-  ['Talleres', 'Ordenes, seguimiento y servicios'],
-  ['Belleza', 'Servicios, citas y contacto rapido'],
-  ['Herreria / PVC', 'Cotizaciones con medidas y detalles'],
+  ['Restaurantes', 'Menu, mesas, pedidos y venta en vivo'],
+  ['Tiendas', 'Catalogo, inventario, cotizaciones y venta en vivo'],
+  ['Servicios', 'Agenda, solicitudes y venta en vivo'],
+  ['Talleres', 'Ordenes, seguimiento y venta en vivo'],
+  ['Belleza', 'Servicios, citas y venta en vivo'],
+  ['Herreria / PVC', 'Cotizaciones con medidas y venta en vivo'],
 ];
 
 const developerLinks = [
@@ -87,7 +97,7 @@ export default function SellInChimaltenangoPage() {
               </Link>
             </div>
             <div className="mt-7 grid max-w-2xl gap-3 sm:grid-cols-3">
-              {['Sin app nueva', 'QR para compartir', 'WhatsApp directo'].map((item) => (
+              {['Sin app nueva', 'QR para compartir', 'Venta en vivo'].map((item) => (
                 <div key={item} className="rounded-xl border border-black/10 bg-white/75 p-4 shadow-sm">
                   <p className="text-sm font-black text-ink">{item}</p>
                 </div>

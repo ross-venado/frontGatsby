@@ -22,30 +22,35 @@ const plans = [
     features: [
       '30 productos',
       'Modulo por nicho',
+      'Venta en vivo con historial',
       'Metricas basicas',
-      'Acciones de compartir y QR',
     ],
   },
   {
     name: 'Pro',
     price: 'Q 349',
     description: 'Para locales con mas movimiento y catalogo amplio.',
-    features: ['100 productos', 'Modulos avanzados', 'Soporte prioritario', 'Mejoras operativas'],
+    features: [
+      '100 productos',
+      'Modulos avanzados',
+      'Venta en vivo avanzada',
+      'Soporte prioritario',
+    ],
   },
 ];
 
 const niches = [
-  ['Restaurantes', 'Menu QR, mesas y pedidos'],
-  ['Tiendas', 'Inventario y cotizaciones'],
-  ['Tecnologia', 'Inventario y cotizaciones'],
-  ['Repuestos', 'Inventario y cotizaciones'],
-  ['Importadores de carros', 'Modulo automotriz'],
-  ['Talleres mecanicos', 'Ordenes y seguimiento'],
-  ['Polarizado y detailing', 'Modulo taller'],
-  ['PVC, vidrio y aluminio', 'Cotizaciones'],
-  ['Herreria', 'Cotizaciones'],
-  ['Belleza y citas', 'Agenda y servicios'],
-  ['Servicios profesionales', 'Citas y cotizaciones'],
+  ['Restaurantes', 'Menu QR, mesas, pedidos y venta en vivo'],
+  ['Tiendas', 'Inventario, cotizaciones y venta en vivo'],
+  ['Tecnologia', 'Inventario, cotizaciones y venta en vivo'],
+  ['Repuestos', 'Inventario, cotizaciones y venta en vivo'],
+  ['Importadores de carros', 'Automotriz y venta en vivo'],
+  ['Talleres mecanicos', 'Ordenes, seguimiento y venta en vivo'],
+  ['Polarizado y detailing', 'Taller y venta en vivo'],
+  ['PVC, vidrio y aluminio', 'Cotizaciones y venta en vivo'],
+  ['Herreria', 'Cotizaciones y venta en vivo'],
+  ['Belleza y citas', 'Agenda, servicios y venta en vivo'],
+  ['Servicios profesionales', 'Citas, cotizaciones y venta en vivo'],
 ];
 
 const developerLinks = [
@@ -61,7 +66,7 @@ export default function PricingPage() {
     <PublicShell
       eyebrow="Planes para negocios locales"
       title="Elige el plan segun como vende tu negocio"
-      description="Free y Basic son gratis para publicar. Plus y Pro activan el adicional del nicho: restaurante, inventario, citas, taller, automotriz o cotizaciones."
+      description="Free y Basic son gratis para publicar. Plus y Pro activan el adicional del nicho: restaurante, inventario, citas, taller, automotriz, cotizaciones o venta en vivo."
     >
       <section className="grid gap-4 lg:grid-cols-4">
         {plans.map((plan) => (

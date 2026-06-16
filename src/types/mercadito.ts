@@ -12,7 +12,8 @@ export type BusinessModule =
   | 'automotive'
   | 'workshop'
   | 'quotes'
-  | 'appointments';
+  | 'appointments'
+  | 'live_sales';
 export type RestaurantTableStatus =
   | 'free'
   | 'occupied'
@@ -155,4 +156,49 @@ export type PublicRestaurantTablePayload = {
   business: Business;
   table: RestaurantTable;
   products: Product[];
+};
+
+export type LiveSessionStatus = 'draft' | 'active' | 'ended';
+export type LiveSessionItemStatus = 'available' | 'sold_out';
+export type LiveLeadStatus = 'new' | 'confirmed' | 'cancelled';
+
+export type LiveSessionItem = {
+  productId: string;
+  code: string;
+  stockOverride?: number;
+  status: LiveSessionItemStatus;
+  product?: Product;
+  isCurrent?: boolean;
+  wasShown?: boolean;
+};
+
+export type LiveSession = {
+  _id: string;
+  businessId: string;
+  business?: Business;
+  title: string;
+  slug: string;
+  status: LiveSessionStatus;
+  currentProductId?: string;
+  currentProduct?: Product | null;
+  shownProductIds: string[];
+  shownProducts: LiveSessionItem[];
+  items: LiveSessionItem[];
+  createdAt?: string;
+  updatedAt?: string;
+};
+
+export type LiveLead = {
+  _id: string;
+  businessId: string;
+  sessionId: string;
+  productId: string;
+  code: string;
+  productName: string;
+  customerName: string;
+  size?: string;
+  quantity: number;
+  notes?: string;
+  status: LiveLeadStatus;
+  createdAt?: string;
 };
